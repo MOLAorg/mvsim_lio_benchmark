@@ -27,10 +27,10 @@ def spline(path):
     return t, pos, rot
 
 
-def _write(f, t, p, q, tfmt):
+def _write(f, t, p, q, tfmt, pfmt):
     for i in range(len(t)):
-        f.write(f'{t[i]:{tfmt}} {p[i, 0]:.7f} {p[i, 1]:.7f} {p[i, 2]:.7f} '
-                f'{q[i, 0]:.10f} {q[i, 1]:.10f} {q[i, 2]:.10f} {q[i, 3]:.10f}\n')
+        f.write(f'{t[i]:{tfmt}} {p[i, 0]:{pfmt}} {p[i, 1]:{pfmt}} {p[i, 2]:{pfmt}} '
+                f'{q[i, 0]:{pfmt}} {q[i, 1]:{pfmt}} {q[i, 2]:{pfmt}} {q[i, 3]:{pfmt}}\n')
 
 
 def sample(path, dt):
@@ -50,7 +50,9 @@ def sample(path, dt):
 def write_dense(src, dst, dt=DENSE_DT):
     ts, p, q = sample(src, dt)
     with open(dst, 'w') as f:
-        _write(f, ts, p, q, '.7f')
+        # Full precision: the IMU second differences over 0.5 ms turn a
+        # 1e-7 m rounding of the positions into ~0.4 m/s^2 of error.
+        _write(f, ts, p, q, '.7f', '.12f')
     return len(ts)
 
 
@@ -58,7 +60,7 @@ def write_gt(src, dst, dt=0.005):
     ts, p, q = sample(src, dt)
     with open(dst, 'w') as f:
         f.write('# timestamp x y z qx qy qz qw  (base_link in the world frame, 200 Hz)\n')
-        _write(f, ts, p, q, '.6f')
+        _write(f, ts, p, q, '.6f', '.9f')
     return len(ts)
 
 

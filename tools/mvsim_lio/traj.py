@@ -286,7 +286,7 @@ def write_tum(path, tr, every=1):
     with open(path, 'w') as f:
         f.write('# timestamp x y z qx qy qz qw  (base_link in the world frame)\n')
         for i in range(0, len(tr['t']), every):
-            f.write(f"{tr['t'][i]:.4f} {tr['x'][i]:.6f} {tr['y'][i]:.6f} {tr['z'][i]:.6f} "
+            f.write(f"{tr['t'][i]:.4f} {tr['x'][i]:.9f} {tr['y'][i]:.9f} {tr['z'][i]:.9f} "
                     f'{q[i, 0]:.9f} {q[i, 1]:.9f} {q[i, 2]:.9f} {q[i, 3]:.9f}\n')
 
 

@@ -22,7 +22,7 @@ import subprocess
 import sys
 import time
 import zlib
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from pathlib import Path
 from queue import Queue
 
@@ -78,6 +78,11 @@ def run_one(world, traj, variant, out_dir, work_dir, cores, force):
     return f'{world}/{traj}/{variant}: OK in {dt:.0f} s, {rawlog.stat().st_size / 1e6:.0f} MB'
 
 
+def _call(job):
+    fn, *args = job
+    return fn(*args)
+
+
 def expand(cores):
     out = []
     for part in cores.split(','):
@@ -108,14 +113,17 @@ def main():
     out_dir = Path(a.out)
     work_dir = out_dir / '.work'
     # Dense trajectories (shared by every variant) and 200 Hz ground truth:
+    todo = []
     for w, t in seqs:
         (work_dir / w).mkdir(parents=True, exist_ok=True)
         (out_dir / w / t).mkdir(parents=True, exist_ok=True)
         src = ROOT / 'worlds' / w / 'trajectories' / f'{t}.tum'
         dense = work_dir / w / f'{t}.dense.tum'
         if a.force or not dense.exists() or dense.stat().st_mtime < src.stat().st_mtime:
-            densify.write_dense(src, dense)
-        densify.write_gt(src, out_dir / w / t / 'gt_200hz.tum')
+            todo.append((densify.write_dense, src, dense))
+        todo.append((densify.write_gt, src, out_dir / w / t / 'gt_200hz.tum'))
+    with ProcessPoolExecutor(max_workers=8) as ex:
+        list(ex.map(_call, todo))
 
     pool = Queue()
     for j in range(a.jobs):
