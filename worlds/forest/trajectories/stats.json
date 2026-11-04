@@ -1,0 +1,28 @@
+{
+ "trail_loop": {
+  "duration": 339.74,
+  "length": 424.983,
+  "vmax": 1.459,
+  "vmean": 1.251,
+  "yawrate_max_deg": 21.909,
+  "pitch_max_deg": 12.233,
+  "roll_max_deg": 10.659,
+  "z_range": 8.035,
+  "platform": "legged",
+  "description": "Legged robot, one lap of the main trail, 1.2 m/s",
+  "min_clearance_m": 0.943
+ },
+ "crossing": {
+  "duration": 137.33,
+  "length": 195.421,
+  "vmax": 1.526,
+  "vmean": 1.423,
+  "yawrate_max_deg": 4.957,
+  "pitch_max_deg": 10.683,
+  "roll_max_deg": 10.353,
+  "z_range": 6.358,
+  "platform": "ugv",
+  "description": "UGV across the forest on the second trail, 1.5 m/s",
+  "min_clearance_m": 0.774
+ }
+}

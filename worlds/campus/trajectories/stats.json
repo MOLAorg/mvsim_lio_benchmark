@@ -1,0 +1,28 @@
+{
+ "long_tour": {
+  "duration": 912.715,
+  "length": 1796.239,
+  "vmax": 2.002,
+  "vmean": 1.968,
+  "yawrate_max_deg": 90.71,
+  "pitch_max_deg": 2.476,
+  "roll_max_deg": 2.487,
+  "z_range": 5.575,
+  "platform": "ugv",
+  "description": "UGV, 2 m/s, plaza, park, buildings, sports field and the plaza again (loop closures)",
+  "min_clearance_m": 2.633
+ },
+ "ring_drive": {
+  "duration": 378.55,
+  "length": 2792.088,
+  "vmax": 8.003,
+  "vmean": 7.376,
+  "yawrate_max_deg": 47.383,
+  "pitch_max_deg": 1.998,
+  "roll_max_deg": 2.298,
+  "z_range": 4.248,
+  "platform": "car",
+  "description": "Car, 8 m/s, two laps of the ring road",
+  "min_clearance_m": 3.96
+ }
+}

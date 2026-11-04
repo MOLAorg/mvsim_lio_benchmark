@@ -1,0 +1,28 @@
+{
+ "walk": {
+  "duration": 232.53,
+  "length": 225.797,
+  "vmax": 1.315,
+  "vmean": 0.971,
+  "yawrate_max_deg": 95.806,
+  "pitch_max_deg": 1.0,
+  "roll_max_deg": 1.5,
+  "z_range": 0.05,
+  "platform": "handheld",
+  "description": "Handheld rig: corridor, two rooms through their doors, lobby",
+  "min_clearance_m": 0.283
+ },
+ "spins": {
+  "duration": 158.78,
+  "length": 120.076,
+  "vmax": 1.0,
+  "vmean": 0.756,
+  "yawrate_max_deg": 179.489,
+  "pitch_max_deg": 0.0,
+  "roll_max_deg": 0.0,
+  "z_range": 0.0,
+  "platform": "ugv",
+  "description": "UGV along the corridor with fast in-place spins (90 deg/s)",
+  "min_clearance_m": 0.633
+ }
+}

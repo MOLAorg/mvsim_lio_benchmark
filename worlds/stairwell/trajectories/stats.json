@@ -1,0 +1,28 @@
+{
+ "legged_floors": {
+  "duration": 287.955,
+  "length": 206.697,
+  "vmax": 0.99,
+  "vmean": 0.718,
+  "yawrate_max_deg": 86.943,
+  "pitch_max_deg": 32.315,
+  "roll_max_deg": 0.75,
+  "z_range": 7.018,
+  "platform": "legged",
+  "description": "Legged robot: up two storeys by the stairs, rooms, and back down, body pitched with the stairs",
+  "min_clearance_m": 0.148
+ },
+ "handheld_stairs": {
+  "duration": 160.25,
+  "length": 118.153,
+  "vmax": 1.192,
+  "vmean": 0.737,
+  "yawrate_max_deg": 85.035,
+  "pitch_max_deg": 6.779,
+  "roll_max_deg": 1.375,
+  "z_range": 3.542,
+  "platform": "handheld",
+  "description": "Handheld rig, upright: up one storey and back down",
+  "min_clearance_m": 0.056
+ }
+}

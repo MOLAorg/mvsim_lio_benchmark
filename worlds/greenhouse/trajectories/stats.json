@@ -1,0 +1,28 @@
+{
+ "aisles": {
+  "duration": 366.7,
+  "length": 413.909,
+  "vmax": 1.2,
+  "vmean": 1.129,
+  "yawrate_max_deg": 81.92,
+  "pitch_max_deg": 0.0,
+  "roll_max_deg": 0.0,
+  "z_range": 0.0,
+  "platform": "ugv",
+  "description": "UGV, 1.2 m/s, down and back two 87 m aisles",
+  "min_clearance_m": 0.741
+ },
+ "walk": {
+  "duration": 253.9,
+  "length": 264.722,
+  "vmax": 1.189,
+  "vmean": 1.043,
+  "yawrate_max_deg": 93.444,
+  "pitch_max_deg": 0.917,
+  "roll_max_deg": 1.375,
+  "z_range": 0.046,
+  "platform": "handheld",
+  "description": "Handheld rig, partial walks along two other aisles",
+  "min_clearance_m": 0.836
+ }
+}

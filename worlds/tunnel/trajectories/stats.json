@@ -1,0 +1,28 @@
+{
+ "car_through": {
+  "duration": 148.035,
+  "length": 1781.528,
+  "vmax": 15.0,
+  "vmean": 12.035,
+  "yawrate_max_deg": 32.17,
+  "pitch_max_deg": 0.0,
+  "roll_max_deg": 0.0,
+  "z_range": 0.0,
+  "platform": "car",
+  "description": "Car, 15 m/s, through the tunnel, turnaround, and back",
+  "min_clearance_m": 1.98
+ },
+ "ugv_inspection": {
+  "duration": 327.62,
+  "length": 797.801,
+  "vmax": 2.5,
+  "vmean": 2.435,
+  "yawrate_max_deg": 2.155,
+  "pitch_max_deg": 0.0,
+  "roll_max_deg": 0.0,
+  "z_range": 0.0,
+  "platform": "ugv",
+  "description": "UGV, 2.5 m/s, once through the tunnel near the right wall",
+  "min_clearance_m": 0.8
+ }
+}

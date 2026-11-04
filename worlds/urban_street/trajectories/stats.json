@@ -1,0 +1,28 @@
+{
+ "car_loops": {
+  "duration": 348.205,
+  "length": 2935.449,
+  "vmax": 10.0,
+  "vmean": 8.43,
+  "yawrate_max_deg": 47.383,
+  "pitch_max_deg": 0.0,
+  "roll_max_deg": 0.0,
+  "z_range": 0.0,
+  "platform": "car",
+  "description": "Car, 10 m/s, outer ring plus two inner loops (revisits)",
+  "min_clearance_m": 4.503
+ },
+ "pedestrian": {
+  "duration": 503.03,
+  "length": 671.14,
+  "vmax": 1.457,
+  "vmean": 1.334,
+  "yawrate_max_deg": 89.868,
+  "pitch_max_deg": 4.745,
+  "roll_max_deg": 1.5,
+  "z_range": 0.192,
+  "platform": "handheld",
+  "description": "Handheld rig walking the sidewalks of two blocks",
+  "min_clearance_m": 0.631
+ }
+}

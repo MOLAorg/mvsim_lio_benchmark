@@ -1,0 +1,28 @@
+{
+ "hill_loop": {
+  "duration": 418.11,
+  "length": 622.91,
+  "vmax": 1.614,
+  "vmean": 1.49,
+  "yawrate_max_deg": 72.083,
+  "pitch_max_deg": 21.758,
+  "roll_max_deg": 19.158,
+  "z_range": 14.057,
+  "platform": "ugv",
+  "description": "UGV, 1.5 m/s, a loop over ridges and through a crater",
+  "min_clearance_m": 2.788
+ },
+ "traverse_fast": {
+  "duration": 117.415,
+  "length": 328.922,
+  "vmax": 3.231,
+  "vmean": 2.801,
+  "yawrate_max_deg": 35.022,
+  "pitch_max_deg": 21.805,
+  "roll_max_deg": 12.67,
+  "z_range": 11.352,
+  "platform": "ugv",
+  "description": "UGV, 3 m/s, diagonal traverse across the hills",
+  "min_clearance_m": 2.694
+ }
+}

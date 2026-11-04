@@ -1,0 +1,28 @@
+{
+ "rows": {
+  "duration": 472.855,
+  "length": 696.133,
+  "vmax": 1.502,
+  "vmean": 1.472,
+  "yawrate_max_deg": 82.281,
+  "pitch_max_deg": 2.59,
+  "roll_max_deg": 2.921,
+  "z_range": 4.466,
+  "platform": "ugv",
+  "description": "UGV, 1.5 m/s, along five inter-row lanes with headland turns",
+  "min_clearance_m": 0.843
+ },
+ "headland": {
+  "duration": 221.06,
+  "length": 524.59,
+  "vmax": 2.502,
+  "vmean": 2.373,
+  "yawrate_max_deg": 82.281,
+  "pitch_max_deg": 2.313,
+  "roll_max_deg": 2.736,
+  "z_range": 5.547,
+  "platform": "ugv",
+  "description": "UGV, 2.5 m/s, one lap of the perimeter track",
+  "min_clearance_m": 4.1
+ }
+}

@@ -1,0 +1,28 @@
+{
+ "search": {
+  "duration": 222.045,
+  "length": 934.439,
+  "vmax": 4.5,
+  "vmean": 4.208,
+  "yawrate_max_deg": 47.383,
+  "pitch_max_deg": 0.0,
+  "roll_max_deg": 0.0,
+  "z_range": 0.0,
+  "platform": "car",
+  "description": "Car, 4.5 m/s, snaking through all six aisles, then a revisit",
+  "min_clearance_m": 1.55
+ },
+ "ugv_loop": {
+  "duration": 310.32,
+  "length": 569.373,
+  "vmax": 2.0,
+  "vmean": 1.835,
+  "yawrate_max_deg": 142.873,
+  "pitch_max_deg": 0.0,
+  "roll_max_deg": 0.0,
+  "z_range": 0.0,
+  "platform": "ugv",
+  "description": "UGV, 2 m/s, store front and aisles, with in-place spins",
+  "min_clearance_m": 1.1
+ }
+}

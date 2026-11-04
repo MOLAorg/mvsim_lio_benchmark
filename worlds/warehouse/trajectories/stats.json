@@ -1,0 +1,28 @@
+{
+ "aisles": {
+  "duration": 218.385,
+  "length": 410.249,
+  "vmax": 2.0,
+  "vmean": 1.879,
+  "yawrate_max_deg": 82.281,
+  "pitch_max_deg": 0.0,
+  "roll_max_deg": 0.0,
+  "z_range": 0.0,
+  "platform": "ugv",
+  "description": "UGV, 2 m/s, through three aisles and around, with a revisit",
+  "min_clearance_m": 1.35
+ },
+ "walk": {
+  "duration": 200.41,
+  "length": 260.493,
+  "vmax": 1.424,
+  "vmean": 1.3,
+  "yawrate_max_deg": 87.516,
+  "pitch_max_deg": 1.0,
+  "roll_max_deg": 1.5,
+  "z_range": 0.05,
+  "platform": "handheld",
+  "description": "Handheld rig through two other aisles and the north staging area",
+  "min_clearance_m": 0.85
+ }
+}

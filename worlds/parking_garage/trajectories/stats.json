@@ -1,0 +1,28 @@
+{
+ "walk_down": {
+  "duration": 241.08,
+  "length": 315.491,
+  "vmax": 1.521,
+  "vmean": 1.309,
+  "yawrate_max_deg": 96.103,
+  "pitch_max_deg": 10.09,
+  "roll_max_deg": 1.5,
+  "z_range": 6.45,
+  "platform": "handheld",
+  "description": "Handheld rig from the roof down both ramps to the ground",
+  "min_clearance_m": 1.5
+ },
+ "up_down": {
+  "duration": 171.41,
+  "length": 565.134,
+  "vmax": 3.547,
+  "vmean": 3.297,
+  "yawrate_max_deg": 73.765,
+  "pitch_max_deg": 9.391,
+  "roll_max_deg": 0.0,
+  "z_range": 6.4,
+  "platform": "car",
+  "description": "Car, 3.5 m/s: ground lap, up two ramps, roof lap, back down",
+  "min_clearance_m": 1.309
+ }
+}

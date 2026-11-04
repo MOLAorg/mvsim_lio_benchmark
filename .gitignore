@@ -1,0 +1,15 @@
+# Generated datasets never go into git (they live under /mnt/datasets/...)
+*.rawlog
+*.rawlog.gz
+*.dense.tum
+*.gt.tum
+gt_200hz.tum
+*.simplemap
+*.mm
+*.bag
+*.mcap
+*.db3
+/data/
+/validation/
+__pycache__/
+*.pyc
