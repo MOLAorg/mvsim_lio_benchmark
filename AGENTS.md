@@ -34,7 +34,7 @@ The data was generated with a local MVSim worktree:
 `~/mvsim_lio_ws/src/mvsim`, branch `local/dataset-gen-time-rounding` (on top
 of `feat/dataset-gen-rolling-lidar-default`, commit 947846ed), built with
 `~/mvsim_lio_ws/build.sh` into `~/mvsim_lio_ws/install` (what `tools/env.sh`
-sources by default). Two commits, not pushed upstream:
+sources by default). Three commits, not pushed upstream:
 
 - `mvsim-dataset-gen: round timestamps to the nearest clock tick`:
   `mrpt::Clock::fromDouble()` truncates, so times land 100 ns early at random;
@@ -44,6 +44,11 @@ sources by default). Two commits, not pushed upstream:
 - `raytracer: cache heightfield z bounds ...`: the elevation-map ray cast
   scanned the whole matrix per ray (about 100x slower than real time on a
   400 x 400 grid). Output unchanged (checked bit for bit).
+- `mvsim-dataset-gen: IMU kinematics at the IMU mounting pose`: the IMU was
+  simulated at the vehicle origin and in the vehicle axes, ignoring its
+  `<pose_3d>` (no lever-arm terms). `tools/check_imu.py` verifies a clean
+  sequence against the trajectory spline at the IMU pose (errors ~1e-5 m/s^2
+  on smooth motion, a few mm/s^2 with gait bobbing).
 
 ## Gotchas found
 
@@ -65,6 +70,9 @@ sources by default). Two commits, not pushed upstream:
 - `mvsim-dataset-gen` interpolates trajectories linearly and differentiates
   them with a step of IMU period / 10: knots must be spaced by a divisor of
   that step (hence 2 kHz dense files), or accelerations are wrong.
+- Write trajectories with full precision: positions rounded to 1e-7 m in the
+  dense file gave +-0.4 m/s^2 of accelerometer error (second differences over
+  0.5 ms). densify.py writes 12 decimals.
 - Path reversals inside one run of `P` points make a cusp with a huge yaw
   rate: put a `Stop()` there (the builder then turns in place). Check
   `yawrate_max_deg` in `stats.json` after editing a trajectory.

@@ -137,10 +137,12 @@ nearest-stamp association with the 10 Hz files.
 ## How to regenerate
 
 Requirements: Python 3 with numpy, scipy, matplotlib and Pillow, and a build
-of MVSim's `mvsim-dataset-gen` that includes two fixes not yet in a release
+of MVSim's `mvsim-dataset-gen` that includes three fixes not yet in a release
 (see [AGENTS.md](AGENTS.md)): timestamp rounding (without it the simulated
-accelerometer is wrong by several m/s^2) and a heightfield speed-up (without it
-terrain worlds render about 100x slower).
+accelerometer is wrong by several m/s^2), IMU kinematics at the IMU mounting
+pose (lever arm), and a heightfield speed-up (without it terrain worlds render
+about 100x slower). `tools/check_imu.py <world> <traj>` checks the IMU of a
+generated clean sequence against the trajectory.
 
 ```bash
 export MVSIM_LIO_MVSIM_INSTALL=/path/to/mvsim/install   # colcon install space
