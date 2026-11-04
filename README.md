@@ -234,10 +234,10 @@ nearest-stamp association with the 10 Hz files.
 
 Requirements: Python 3 with numpy, scipy, matplotlib and Pillow, and a build
 of MVSim's `mvsim-dataset-gen` that includes three fixes not yet in a release
-(see [AGENTS.md](AGENTS.md)): timestamp rounding (without it the simulated
-accelerometer is wrong by several m/s^2), IMU kinematics at the IMU mounting
-pose (lever arm), and a heightfield speed-up (without it terrain worlds render
-about 100x slower). `tools/check_imu.py <world> <traj>` checks the IMU of a
+(MRPT/mvsim #170, #171 and #168; see [AGENTS.md](AGENTS.md)): exact IMU
+timestamps (without it the simulated accelerometer is wrong by several
+m/s^2), IMU kinematics at the IMU mounting pose (lever arm), and a heightfield
+speed-up (without it terrain worlds render about 100x slower). `tools/check_imu.py <world> <traj>` checks the IMU of a
 generated clean sequence against the trajectory.
 
 ```bash

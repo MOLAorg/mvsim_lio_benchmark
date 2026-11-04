@@ -30,25 +30,31 @@ otherwise), then rerun the manifest.
 
 ## MVSim requirements (patched build)
 
-The data was generated with a local MVSim worktree:
-`~/mvsim_lio_ws/src/mvsim`, branch `local/dataset-gen-time-rounding` (on top
-of `feat/dataset-gen-rolling-lidar-default`, commit 947846ed), built with
-`~/mvsim_lio_ws/build.sh` into `~/mvsim_lio_ws/install` (what `tools/env.sh`
-sources by default). Three commits, not pushed upstream:
+The published data was generated with a local MVSim worktree,
+`~/mvsim_lio_ws/src/mvsim`, branch `local/dataset-gen-time-rounding`. That
+branch is on top of `feat/dataset-gen-rolling-lidar-default`, commit 947846ed.
+It was built with `~/mvsim_lio_ws/build.sh` into `~/mvsim_lio_ws/install`,
+which is what `tools/env.sh` sources by default. Its fixes are now upstream
+PRs, and the worktree is on `local/mvsim-lio-benchmark`, which merges all
+three:
 
-- `mvsim-dataset-gen: round timestamps to the nearest clock tick`:
-  `mrpt::Clock::fromDouble()` truncates, so times land 100 ns early at random;
-  the IMU finite-difference step is 0.5 ms, which turned that into errors of
-  the order of the speed in m/s^2 (a 2 m/s straight line read -9.5 +- 7.8
-  m/s^2). With the fix a constant-velocity line reads exactly 0.
-- `raytracer: cache heightfield z bounds ...`: the elevation-map ray cast
-  scanned the whole matrix per ray (about 100x slower than real time on a
-  400 x 400 grid). Output unchanged (checked bit for bit).
-- `mvsim-dataset-gen: IMU kinematics at the IMU mounting pose`: the IMU was
-  simulated at the vehicle origin and in the vehicle axes, ignoring its
-  `<pose_3d>` (no lever-arm terms). `tools/check_imu.py` verifies a clean
-  sequence against the trajectory spline at the IMU pose (errors ~1e-5 m/s^2
-  on smooth motion, a few mm/s^2 with gait bobbing).
+- MRPT/mvsim#170, exact timestamps for the IMU finite differences.
+  `mrpt::Clock::fromDouble()` truncated times. `CPose3DInterpolator` resolves
+  only about 2 us with absolute times, and the stencil times were inexact
+  doubles. Through the 0.5 ms step this gave accelerometer errors of several
+  m/s^2: a 2 m/s straight line read -9.5 +- 7.8 m/s^2. The PR stores knots
+  relative to the first one and uses exact clock ticks. The published data
+  was not affected by the interpolation part: its 2 kHz knots put every
+  stencil point exactly on a knot, so no interpolation happens there.
+- MRPT/mvsim#171 (stacked on #170), IMU kinematics at the IMU mounting pose.
+  The IMU was simulated at the vehicle origin and in the vehicle axes,
+  ignoring its `<pose_3d>`, so there were no lever-arm terms.
+  `tools/check_imu.py` verifies a clean sequence against the trajectory
+  spline at the IMU pose: errors are about 1e-5 m/s^2 on smooth motion, and
+  a few mm/s^2 with gait bobbing.
+- MRPT/mvsim#168, heightfield z bounds cached. The elevation-map ray cast
+  scanned the whole matrix per ray, about 100x slower than real time on a
+  400 x 400 grid. Output is unchanged (checked bit for bit).
 
 ## Gotchas found
 
