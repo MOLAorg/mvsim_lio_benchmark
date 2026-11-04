@@ -1,5 +1,5 @@
-"""forest: 200 x 200 m of hilly woodland (+-5 m, slopes up to ~20%) with
-about 1700 trees (porous sphere-cluster crowns, branches, some conifers),
+"""forest: 200 x 200 m of hilly woodland (+-5 m, slopes up to 25%) with
+about 1350 trees (porous sphere-cluster crowns, branches, some conifers),
 bushes and fallen logs. Two cleared trails. Stresses unstructured,
 vegetation-like clutter with few planar surfaces, plus pitch/roll on slopes."""
 import math

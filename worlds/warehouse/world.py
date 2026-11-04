@@ -3,7 +3,6 @@ trusses, six double rows of 8 m pallet racks (5 levels, randomly filled)
 separated by 3.6 m aisles, loading docks with door openings, staging areas
 with pallets and an office cabin. Indoor and repetitive: the aisles look
 alike, with long, nearly identical views along them."""
-import math
 
 import numpy as np
 

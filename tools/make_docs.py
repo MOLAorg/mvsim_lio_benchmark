@@ -42,7 +42,9 @@ def describe(name):
     x0, x1, y0, y1 = w.extent
     doc = first_paragraph(mod.__doc__)
     head, _, rest = doc.partition(': ')
-    return dict(name=name, doc=rest or doc, size=f'{x1 - x0:.0f} x {y1 - y0:.0f} m',
+    desc = rest or doc
+    desc = desc[:1].upper() + desc[1:]
+    return dict(name=name, doc=desc, size=f'{x1 - x0:.0f} x {y1 - y0:.0f} m',
                 prims=w.n_prims, stats=stats, mod=mod)
 
 

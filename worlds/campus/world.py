@@ -1,7 +1,7 @@
 """campus: a 500 x 400 m university campus on gently rolling ground (+-3 m):
-ten buildings (one with a courtyard, a 25 m tower), a central plaza with a
-fountain and benches, a tree-lined ring road with lamp posts, a park with
-~200 trees, a car park, and a fenced sports field with goals and bleachers.
+nine buildings (one with a courtyard, a 25 m tower), a central plaza with a
+fountain and benches, a tree-lined ring road with lamp posts, about 300
+trees (most in a park), a car park, and a fenced sports field with goals and bleachers.
 Mixed structure and vegetation at large scale; long sequences with loops."""
 import math
 
@@ -9,6 +9,7 @@ import numpy as np
 
 from mvsim_lio import props
 from mvsim_lio.geom import dist_to_polyline
+from mvsim_lio.roads import lane_path
 from mvsim_lio.traj import P
 from mvsim_lio.world import Terrain, World
 
@@ -72,7 +73,7 @@ def make_world():
         for s in np.arange(15.0, L - 10, 30.0):
             for side in (-1, 1):
                 px, py = ax + ux * s - uy * side * 7.0, ay + uy * s + ux * side * 7.0
-                props.lamp_post(w, px, py, g(px, py), math.atan2(uy * side, -ux * side) + 0,
+                props.lamp_post(w, px, py, g(px, py), math.atan2(uy * side, -ux * side),
                                 height=7.0, arm=1.0)
                 tx, ty = ax + ux * (s + 15) - uy * side * 10.0, ay + uy * (s + 15) + ux * side * 10.0
                 if s + 15 < L - 10:
@@ -97,8 +98,7 @@ def make_world():
             if rng.uniform() < 0.75:
                 props.car(w, rng, x, y, g(x, y), yaw)
     # Sports field (south-west) with a fence, goals and bleachers
-    fx0, fx1, fy0, fy1 = -125.0, -35.0, -95.0, -70.0 + 0.0
-    fy0, fy1 = -100.0, -45.0
+    fx0, fx1, fy0, fy1 = -125.0, -35.0, -100.0, -45.0
     for (ax, ay, bx, by) in ((fx0, fy0, fx1, fy0), (fx1, fy0, fx1, fy1), (fx1, fy1, fx0, fy1)):
         props.fence(w, ax, ay, bx, by, g, spacing=3.0, height=2.0, rails=3)
     props.fence(w, fx0, fy1, fx0, fy0 + 35.0, g, spacing=3.0, height=2.0, rails=3)  # gate gap
@@ -110,17 +110,12 @@ def make_world():
                    yaw=math.pi / 2, pitch=math.pi / 2, color='#f0f0f0')
     zb = g(-80.0, fy1 + 6.0)
     for k in range(4):
-        w.box(-80.0, fy1 + 5.0 + 0.8 * k, zb - 0.2 + 0.0, 40.0, 0.8, 0.6 + 0.45 * k, 0.0, '#9090a0')
+        w.box(-80.0, fy1 + 5.0 + 0.8 * k, zb - 0.2, 40.0, 0.8, 0.6 + 0.45 * k, 0.0, '#9090a0')
     return w
 
 
 def trajectories(world):
     tour = [P(*TOUR[0], v=2.0)] + [P(*p) for p in TOUR[1:]]
-    ring = [P(-200, -120, v=8.0)]
-    for _ in range(2):
-        ring += [P(-200, -150), P(200, -150), P(200, 150), P(-200, 150)]
-    ring += [P(-200, -110)]
-    from mvsim_lio.roads import lane_path
     nodes = [(-200, -120), (-200, -150), (200, -150), (200, 150), (-200, 150), (-200, -150),
              (200, -150), (200, 150), (-200, 150), (-200, -100)]
     ring = [P(x, y, v=8.0) for x, y in lane_path(nodes, 2.0)]

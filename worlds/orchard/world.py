@@ -1,8 +1,7 @@
 """orchard: 23 rows x 31 fruit trees (5 m between rows, 4 m within a row)
-on a gently sloped field (3%), with trellis posts, a perimeter farm track, a
+on a gently sloped field (3%; ~4% of the trees missing), with trellis posts, a perimeter farm track, a
 hedge, a fence, a shed and a water tank. Highly repetitive along and across
 the rows (aliasing); the LiDAR sees trunks under the crowns."""
-import math
 
 import numpy as np
 

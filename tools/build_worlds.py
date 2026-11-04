@@ -8,7 +8,6 @@ Usage: tools/build_worlds.py [world_name ...]
 """
 import importlib.util
 import json
-import math
 import sys
 from pathlib import Path
 

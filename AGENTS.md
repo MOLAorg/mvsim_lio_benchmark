@@ -87,8 +87,21 @@ sources by default). Three commits, not pushed upstream:
 - Rendering a world in `mvsim launch` steps Box2D: thousands of blocks are
   fine because they are static.
 
+## Validation
+
+`tools/validate_mola.py --variant <v>` runs `mola-lo-cli-rawlog` (labels
+`lidar1`/`imu1`; the default pipeline de-skews with a constant-velocity model
+and uses the accelerometer for gravity) and writes
+`/mnt/datasets/mvsim_lio_benchmark/validation/summary.json`, which
+`make_docs.py` turns into the README table. Clean global-shutter runs of the
+structured worlds give mm to cm errors; large errors in open_field, tunnel
+(UGV) and campus persist with clean data (scene degeneracy, not data bugs).
+
 ## Machine notes
 
 Shared server: use at most ~40 cores (`--jobs 5 --cores-per-job 8`), check
-`uptime` first. Each mvsim-dataset-gen job runs at about 4 to 10x real time
-with 8 threads; a full regeneration of all 130 sequences takes about an hour.
+`uptime` first. Each mvsim-dataset-gen job runs at 2.3 to 6.7x real time with
+8 threads (indoor worlds, where every ray hits, are the slowest); all 130
+sequences took about 40 minutes and 93 GB. MOLA validation of two variants
+(52 runs) took about 30 minutes. `make_docs.py --manifest` hashes everything
+in about 3 minutes.

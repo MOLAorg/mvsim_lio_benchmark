@@ -1,5 +1,5 @@
 """rough_terrain: 260 x 260 m of steep, bumpy hills and valleys (+-10 m,
-slopes up to ~25 deg, 7 m bumps) with two craters, ~400 boulders of 0.3-1.6 m
+slopes up to 26 deg, with 0.6 m bumps) with two craters, ~400 boulders of 0.3-1.6 m
 and a few dead trees. Stresses large, fast-changing pitch and roll, and a
 scene made almost only of terrain and rocks (no planes or poles)."""
 import math

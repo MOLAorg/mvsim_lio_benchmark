@@ -38,7 +38,7 @@ def slab(w, z, holes):
               '#b0aca4', drivable=True, plot=False)
 
 
-def parapets(w, z, skip=None):
+def parapets(w, z):
     for (xa, ya, xb, yb) in ((X0, Y0, X1, Y0), (X0, Y1, X1, Y1), (X0, Y0, X0, Y1), (X1, Y0, X1, Y1)):
         w.box_between(xa, ya, xb, yb, z, 0.2, 1.1, '#c0bcb4')
 
@@ -96,11 +96,11 @@ def trajectories(world):
     z0, z1, z2 = LEVELS
     ya = AISLE_Y
 
-    def lap(z, start_x, east_first=True):
+    def lap(z):
         # One loop around the level's aisle ring, counter-clockwise.
         return [P(END_X, -ya, z), P(END_X, ya, z), P(-END_X, ya, z), P(-END_X, -ya, z)]
 
-    up = [P(-42.0, -10.5, z0, v=3.5), P(-36.0, -10.5, z0), P(-END_X, -ya, z0)] + lap(z0, 0)[:]
+    up = [P(-42.0, -10.5, z0, v=3.5), P(-36.0, -10.5, z0), P(-END_X, -ya, z0)] + lap(z0)
     # From the SW corner, go onto ramp A (south strip), up to level 1
     up += [P(-16.0, -ya, z0), P(RAMP_X0 - 3.0, -17.0, z0), P(RAMP_X0, -17.0, z0),
            P(RAMP_X1, -17.0, z1), P(RAMP_X1 + 3.0, -17.0, z1), P(16.0, -ya, z1)]
