@@ -386,5 +386,8 @@ TODO: the datasets will be published later; the location is not decided yet.
 
 ## License
 
-TODO (owner to decide): proposed BSD-3-Clause for the code and CC BY 4.0 for
-the generated data.
+- Code, world files, trajectories and sensor definitions in this repository:
+  BSD 3-Clause, see [LICENSE](LICENSE).
+- Generated datasets (`.rawlog`, `.gt.tum`): CC BY 4.0, see
+  [DATA_LICENSE.md](DATA_LICENSE.md). Commercial use and model training are
+  allowed with attribution.
