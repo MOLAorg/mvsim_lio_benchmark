@@ -61,7 +61,18 @@ PLATFORMS = {
                    gait=(0.30, 0.012, 1.0, 1.2), vmax=1.8),
     'handheld': dict(h_base=0.75, length=0.3, width=0.3, a_long=0.8, a_lat=1.2, corner=0.6,
                      gait=(0.70, 0.025, 1.5, 1.0), vmax=1.8),
+    # Quadruped robot dog: a time-based trot (see DOG_TROT) instead of the
+    # distance-based gait above; base_link at the ground, LiDAR at 0.75 m.
+    'dog': dict(h_base=0.0, length=0.7, width=0.35, a_long=0.8, a_lat=1.0, corner=0.5,
+                gait=None, trot=True, vmax=1.5),
 }
+
+# Robot dog trot: gait cycle frequency [Hz]; body bounce (twice per cycle),
+# roll (once per cycle), pitch (twice per cycle) and yaw (once per cycle)
+# amplitudes at the nominal speed; plus a stair-synchronous bounce and pitch
+# (one per tread) on stairs.
+DOG_TROT = dict(freq=2.0, v_nom=0.8, bob=0.008, roll_deg=2.0, pitch_deg=1.5, yaw_deg=1.0,
+                stair_tread=0.28, stair_bob=0.015, stair_pitch_deg=2.0)
 
 
 def _resample_polyline(pts, ds):
@@ -266,6 +277,26 @@ def build(items, platform, terrain=None, explicit_z=False, seed=0, rest=3.0,
         z = z + bob * amp * np.cos(2 * phase)
         roll = roll + math.radians(sway_r) * amp * np.sin(phase)
         pitch = pitch + math.radians(sway_p) * amp * np.sin(2 * phase + 0.7)
+
+    if plat.get('trot'):
+        g = DOG_TROT
+        speed = np.gradient(s, dt)
+        amp = np.clip(speed / g['v_nom'], 0.0, 1.2)
+        amp = gaussian_filter1d(amp, 0.3 * RATE_HZ, mode='nearest')
+        ph = 2 * math.pi * g['freq'] * (t - t[0])
+        z = z + g['bob'] * amp * np.cos(2 * ph)
+        roll = roll + math.radians(g['roll_deg']) * amp * np.sin(ph)
+        pitch = pitch + math.radians(g['pitch_deg']) * amp * np.sin(2 * ph + 0.7)
+        yaw = yaw + math.radians(g['yaw_deg']) * amp * np.sin(ph + 1.3)
+        if explicit_z:
+            # On stairs the body rises tread by tread: extra bounce and pitch
+            # synchronized with the horizontal distance traveled.
+            on_stairs = gaussian_filter1d(
+                np.clip(np.abs(c['slope']) / 0.3, 0.0, 1.0), 0.3 * RATE_HZ, mode='nearest')
+            w = on_stairs * np.clip(speed / 0.3, 0.0, 1.0)
+            sp = 2 * math.pi * s / g['stair_tread']
+            z = z + g['stair_bob'] * w * np.cos(sp)
+            pitch = pitch + math.radians(g['stair_pitch_deg']) * w * np.sin(sp)
 
     return dict(t=t, x=x, y=y, z=z, yaw=yaw, pitch=pitch, roll=roll)
 

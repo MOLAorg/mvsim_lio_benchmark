@@ -1,0 +1,28 @@
+{
+ "dog_floors": {
+  "duration": 452.165,
+  "length": 267.869,
+  "vmax": 1.037,
+  "vmean": 0.592,
+  "yawrate_max_deg": 117.724,
+  "pitch_max_deg": 28.796,
+  "roll_max_deg": 2.4,
+  "z_range": 6.019,
+  "platform": "dog",
+  "description": "Robot dog: from the street up both storeys, through the rooms of one apartment per floor, and back down",
+  "min_clearance_m": 0.101
+ },
+ "dog_stairs": {
+  "duration": 200.505,
+  "length": 118.889,
+  "vmax": 1.233,
+  "vmean": 0.593,
+  "yawrate_max_deg": 121.802,
+  "pitch_max_deg": 29.109,
+  "roll_max_deg": 2.4,
+  "z_range": 6.018,
+  "platform": "dog",
+  "description": "Robot dog: fast up and down the dog-leg stair, ground floor to top floor and back, twice",
+  "min_clearance_m": 0.309
+ }
+}

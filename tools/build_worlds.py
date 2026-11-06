@@ -21,7 +21,7 @@ from mvsim_lio.plot import plot_world  # noqa: E402
 
 # Body clearance per platform: radius [m] and height band above the ground [m].
 BODY = {'car': (0.95, 0.3, 1.6), 'ugv': (0.40, 0.1, 0.9), 'legged': (0.30, 0.1, 0.7),
-        'handheld': (0.30, 0.3, 1.8)}
+        'handheld': (0.30, 0.3, 1.8), 'dog': (0.35, 0.15, 0.8)}
 
 
 def load_world_module(name):
@@ -102,7 +102,9 @@ def build(name):
                      explicit_z=spec.get('explicit_z', False), seed=spec.get('seed', 0),
                      look_around_deg=spec.get('look_around_deg', 0.0),
                      pitch_scale=spec.get('pitch_scale', 1.0))
-        every = int(T.RATE_HZ / 20)
+        # Knots at 20 Hz, or faster for carriers with a fast gait (the dog's
+        # 4 Hz bounce needs 50 Hz knots to survive the spline).
+        every = int(T.RATE_HZ / spec.get('knot_hz', 20))
         T.write_tum(tdir / f'{tname}.tum', tr, every=every)
         st = T.stats(tr)
         st['platform'] = spec['platform']

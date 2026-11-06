@@ -1,4 +1,4 @@
-"""Densify a committed trajectory (TUM, 20 Hz knots) with a C2 spline.
+"""Densify a committed trajectory (TUM, 20 or 50 Hz knots) with a C2 spline.
 
 mvsim-dataset-gen interpolates trajectories linearly (positions) and with
 slerp (rotations), and computes IMU readings by finite differences with a

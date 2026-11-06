@@ -143,7 +143,15 @@ def trajectories(world):
     hand = ([P(-13.0, 0.0, z0, v=1.1)] + to_stairs(z0) + climb(z0) + from_stairs(z1, -10.0) +
             [Stop(1.0)] + to_stairs(z1) + descend(z1) + from_stairs(z0, 3.0) +
             room(z0, 3.0, -1, 1.6) + [P(-12.0, 0.0, z0)])
+    dog = ([P(-13.0, 0.0, z0, v=1.0)] + to_stairs(z0) + climb(z0) + from_stairs(z1, 3.0) +
+           room(z1, 3.0, 1, 1.2) + to_stairs(z1) + climb(z1) + from_stairs(z2, -12.0) +
+           [Stop(1.0)] + to_stairs(z2) + descend(z2) + [Stop(1.0)] + descend(z1) +
+           from_stairs(z0, -12.0))
     return {
+        'dog_floors': dict(items=dog, platform='dog', explicit_z=True, seed=3, knot_hz=50,
+                           pitch_scale=0.85,
+                           description='Robot dog: up both storeys by the U-shaped stairs, a '
+                                       'room on the first floor, and straight back down'),
         'legged_floors': dict(items=legged, platform='legged', explicit_z=True, seed=1,
                               description='Legged robot: up two storeys by the stairs, rooms, '
                                           'and back down, body pitched with the stairs'),

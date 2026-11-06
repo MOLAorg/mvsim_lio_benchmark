@@ -1,0 +1,15 @@
+{
+ "dog_course": {
+  "duration": 160.05,
+  "length": 108.163,
+  "vmax": 1.132,
+  "vmean": 0.676,
+  "yawrate_max_deg": 133.668,
+  "pitch_max_deg": 30.31,
+  "roll_max_deg": 2.4,
+  "z_range": 6.018,
+  "platform": "dog",
+  "description": "Robot dog: courtyard, straight flight up, spiral up to the platform, spiral and flight back down",
+  "min_clearance_m": 0.241
+ }
+}
