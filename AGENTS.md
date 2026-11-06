@@ -28,24 +28,28 @@ Changing a world or trajectory invalidates its data: regenerate with
 `tools/generate.py --worlds <w> --force` (existing outputs are skipped
 otherwise), then rerun the manifest.
 
-## MVSim requirements (patched build)
+## MVSim requirements
 
-The published data was generated with a local MVSim worktree,
-`~/mvsim_lio_ws/src/mvsim`, branch `local/dataset-gen-time-rounding`. That
-branch is on top of `feat/dataset-gen-rolling-lidar-default`, commit 947846ed.
-It was built with `~/mvsim_lio_ws/build.sh` into `~/mvsim_lio_ws/install`,
-which is what `tools/env.sh` sources by default. Its fixes are now upstream
-PRs, and the worktree is on `local/mvsim-lio-benchmark`, which merges all
-three:
+Build MVSim's `develop` (it has the three fixes below) in `~/ros2_ws`:
+clone MRPT/mvsim into `~/ros2_ws/src/mvsim` and run
+`colcon build --packages-select mvsim --cmake-args -DCMAKE_BUILD_TYPE=Release`
+from `~/ros2_ws`. Never build the whole workspace there (other packages carry
+local experimental patches). `tools/env.sh` sources `~/ros2_ws/install`, or
+`$MVSIM_LIO_MVSIM_INSTALL` if set.
+
+All data (2026-11-06) was regenerated with develop at commit 7b203a52. The
+first release (2026-11-04) was made with a pre-review worktree of the same
+fixes; the review of #170 changed the trajectory interpolation to times
+relative to the first knot, which moves LiDAR points at the float-rounding
+level, so those files were not byte-identical to an upstream build and were
+all regenerated.
 
 - MRPT/mvsim#170, exact timestamps for the IMU finite differences.
   `mrpt::Clock::fromDouble()` truncated times. `CPose3DInterpolator` resolves
   only about 2 us with absolute times, and the stencil times were inexact
   doubles. Through the 0.5 ms step this gave accelerometer errors of several
   m/s^2: a 2 m/s straight line read -9.5 +- 7.8 m/s^2. The PR stores knots
-  relative to the first one and uses exact clock ticks. The published data
-  was not affected by the interpolation part: its 2 kHz knots put every
-  stencil point exactly on a knot, so no interpolation happens there.
+  relative to the first one and uses exact clock ticks.
 - MRPT/mvsim#171 (stacked on #170), IMU kinematics at the IMU mounting pose.
   The IMU was simulated at the vehicle origin and in the vehicle axes,
   ignoring its `<pose_3d>`, so there were no lever-arm terms.
@@ -55,6 +59,31 @@ three:
 - MRPT/mvsim#168, heightfield z bounds cached. The elevation-map ray cast
   scanned the whole matrix per ray, about 100x slower than real time on a
   400 x 400 grid. Output is unchanged (checked bit for bit).
+
+## Carriers and stairs
+
+`traj.PLATFORMS` defines the carriers (`car`, `ugv`, `legged`, `handheld`,
+`dog`). The `dog` (quadruped robot) uses a time-based trot (`traj.DOG_TROT`:
+2 Hz cycle, 4 Hz body bounce, roll/pitch/yaw oscillations, plus a bounce and
+pitch per tread on stairs) instead of the distance-based gait of the others.
+Its gait rotations pivot about a point 0.45 m above `base_link` (the body
+center, where the IMU is): rotating about `base_link` on the ground gave the
+IMU ~7 m/s^2 of spurious lever-arm acceleration. Its trajectories are
+committed with `knot_hz=50`: with 20 Hz knots the cubic
+spline would distort the 4 Hz bounce. Set `pitch_scale` (0.85 for the dog,
+0.2 for an upright handheld rig) to choose how much the body pitches with
+the stairs. Stairs are `props.stairs_flight()` boxes (with a `thickness`, so
+the flights above leave headroom); the spiral in `stair_course` is built
+directly from yawed boxes around a column. Paths on stairs use explicit z
+(`explicit_z=True`) with waypoints at the first and last tread of each
+flight; put the stair speed limit (`P(..., v=...)`) on a point that is kept
+when lists are concatenated with `[1:]`.
+
+The planar `odom` stream (CObservationOdometry) is derived from the ground
+truth for every carrier; it is meaningless for legged, dog and handheld
+sequences, and its label collides with MOLA's own `odom` frame in the
+smoother (fixed in mola_state_estimation#102). validate_mola.py uses the
+simple estimator and is unaffected.
 
 ## Gotchas found
 
@@ -105,8 +134,9 @@ structured worlds give mm to cm errors; large errors in open_field, tunnel
 
 ## Machine notes
 
-Shared server: use at most ~40 cores (`--jobs 5 --cores-per-job 8`), check
-`uptime` first. Each mvsim-dataset-gen job runs at 2.3 to 6.7x real time with
+Shared server, also used for pinned benchmark sweeps: use `nice -n 10` and at
+most 16 cores (`--jobs 2 --cores-per-job 8 --first-core 72`), check `uptime`
+first, and keep scratch files in a private subdirectory. Each mvsim-dataset-gen job runs at 2.3 to 6.7x real time with
 8 threads (indoor worlds, where every ray hits, are the slowest); all 130
 sequences took about 40 minutes and 93 GB. MOLA validation of two variants
 (52 runs) took about 30 minutes. `make_docs.py --manifest` hashes everything

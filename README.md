@@ -1,7 +1,7 @@
 # mvsim_lio_benchmark
 
-A simulated LiDAR-inertial benchmark: 13 [MVSim](https://github.com/MRPT/mvsim)
-worlds, 26 predefined 6-DoF trajectories, and the scripts that render them to
+A simulated LiDAR-inertial benchmark: 15 [MVSim](https://github.com/MRPT/mvsim)
+worlds, 30 predefined 6-DoF trajectories, and the scripts that render them to
 MRPT `.rawlog` datasets (rotating 3D LiDAR with per-point timestamps, 200 Hz
 IMU, wheel odometry) with exact ground truth.
 
@@ -177,8 +177,8 @@ Rigs (`rigs/*.rig.xml`, sensor parameters pinned in the files):
 
 - **Wheel odometry** (`odom`): planar odometry at 10 Hz derived from the
   ground truth (1% relative noise in the noisy variants). It is written for
-  every carrier, including the handheld and legged ones, where it is not
-  physically meaningful.
+  every carrier, including the handheld, legged and dog ones, where it is not
+  physically meaningful: do not use it for those sequences.
 - **Intensity**: not generated (MVSim has no material model).
 
 ### Frames and extrinsics
@@ -199,6 +199,12 @@ depends on the carrier platform the trajectory emulates:
 | `ugv` | 0.00 m | 0.75 m | up to 3 m/s, in-place turns and spins, tilted by the terrain under a 0.8 x 0.6 m footprint |
 | `legged` | 0.35 m | 1.10 m | up to 1.8 m/s, gait bobbing (1.2 cm) and sway (1 deg), pitched along stairs |
 | `handheld` | 0.75 m | 1.50 m | up to 1.8 m/s, gait bobbing (2.5 cm) and sway (1.5 deg), slow look-around yaw |
+| `dog` | 0.00 m | 0.75 m | quadruped robot: up to 1.5 m/s on the flat and 0.3 to 0.6 m/s on stairs; 2 Hz trot with a 0.8 cm body bounce at 4 Hz, roll (2 deg), pitch (1.5 deg) and yaw (1 deg) oscillations; on stairs an extra bounce (1.5 cm) and pitch (2 deg) per tread, and the body pitched at 85% of the stair slope; gait rotations pivot about the body center, 0.45 m above `base_link` |
+
+Stair types: straight flights (`stair_course`), a spiral stair
+(`stair_course`), U-shaped stairs with a well (`stairwell`) and dog-leg stairs
+with a central wall (`apartment_building`). Steps are boxes; the spiral's
+treads are rectangular boxes around a central column.
 
 ### Conventions
 
@@ -210,7 +216,8 @@ depends on the carrier platform the trajectory emulates:
 - TUM files: `timestamp x y z qx qy qz qw` (the pose of the frame in the
   world).
 - Trajectories are defined in `worlds/<world>/trajectories/<traj>.tum` (20 Hz
-  knots, `base_link`); the generator interpolates them with a C2 spline
+  knots, 50 Hz for the `dog` sequences so that the gait survives the spline;
+  `base_link`); the generator interpolates them with a C2 spline
   (`tools/mvsim_lio/densify.py`).
 
 ## Files
@@ -233,15 +240,17 @@ nearest-stamp association with the 10 Hz files.
 ## How to regenerate
 
 Requirements: Python 3 with numpy, scipy, matplotlib and Pillow, and a build
-of MVSim's `mvsim-dataset-gen` that includes three fixes not yet in a release
-(MRPT/mvsim #170, #171 and #168; see [AGENTS.md](AGENTS.md)): exact IMU
-timestamps (without it the simulated accelerometer is wrong by several
+of MVSim's `develop` branch (the data was generated with commit 7b203a52) that
+includes MRPT/mvsim #168, #170 and #171 (see [AGENTS.md](AGENTS.md)): exact
+IMU timestamps (without them the simulated accelerometer is wrong by several
 m/s^2), IMU kinematics at the IMU mounting pose (lever arm), and a heightfield
-speed-up (without it terrain worlds render about 100x slower). `tools/check_imu.py <world> <traj>` checks the IMU of a
-generated clean sequence against the trajectory.
+speed-up (without it terrain worlds render about 100x slower).
+`tools/check_imu.py <world> <traj>` checks the IMU of a generated clean
+sequence against the trajectory.
 
 ```bash
-export MVSIM_LIO_MVSIM_INSTALL=/path/to/mvsim/install   # colcon install space
+# MVSim built with colcon, e.g. in ~/ros2_ws: colcon build --packages-select mvsim
+export MVSIM_LIO_MVSIM_INSTALL=/path/to/mvsim/install   # if not in ~/ros2_ws/install
 source tools/env.sh
 tools/build_worlds.py              # worlds/*/world.xml, trajectories, plots
 tools/generate.py --jobs 5 --cores-per-job 8   # all sequences and variants

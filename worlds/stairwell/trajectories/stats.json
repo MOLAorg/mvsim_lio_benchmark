@@ -1,13 +1,13 @@
 {
  "dog_floors": {
   "duration": 228.6,
-  "length": 159.876,
-  "vmax": 1.048,
-  "vmean": 0.699,
+  "length": 162.675,
+  "vmax": 1.401,
+  "vmean": 0.712,
   "yawrate_max_deg": 99.721,
   "pitch_max_deg": 30.099,
   "roll_max_deg": 2.4,
-  "z_range": 7.019,
+  "z_range": 7.018,
   "platform": "dog",
   "description": "Robot dog: up both storeys by the U-shaped stairs, a room on the first floor, and straight back down",
   "min_clearance_m": 0.15

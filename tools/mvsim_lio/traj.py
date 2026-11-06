@@ -70,9 +70,9 @@ PLATFORMS = {
 # Robot dog trot: gait cycle frequency [Hz]; body bounce (twice per cycle),
 # roll (once per cycle), pitch (twice per cycle) and yaw (once per cycle)
 # amplitudes at the nominal speed; plus a stair-synchronous bounce and pitch
-# (one per tread) on stairs.
+# (one per tread) on stairs. Rotations pivot about pivot_z above base_link.
 DOG_TROT = dict(freq=2.0, v_nom=0.8, bob=0.008, roll_deg=2.0, pitch_deg=1.5, yaw_deg=1.0,
-                stair_tread=0.28, stair_bob=0.015, stair_pitch_deg=2.0)
+                stair_tread=0.28, stair_bob=0.015, stair_pitch_deg=2.0, pivot_z=0.45)
 
 
 def _resample_polyline(pts, ds):
@@ -284,10 +284,10 @@ def build(items, platform, terrain=None, explicit_z=False, seed=0, rest=3.0,
         amp = np.clip(speed / g['v_nom'], 0.0, 1.2)
         amp = gaussian_filter1d(amp, 0.3 * RATE_HZ, mode='nearest')
         ph = 2 * math.pi * g['freq'] * (t - t[0])
-        z = z + g['bob'] * amp * np.cos(2 * ph)
-        roll = roll + math.radians(g['roll_deg']) * amp * np.sin(ph)
-        pitch = pitch + math.radians(g['pitch_deg']) * amp * np.sin(2 * ph + 0.7)
-        yaw = yaw + math.radians(g['yaw_deg']) * amp * np.sin(ph + 1.3)
+        dz = g['bob'] * amp * np.cos(2 * ph)
+        droll = math.radians(g['roll_deg']) * amp * np.sin(ph)
+        dpitch = math.radians(g['pitch_deg']) * amp * np.sin(2 * ph + 0.7)
+        dyaw = math.radians(g['yaw_deg']) * amp * np.sin(ph + 1.3)
         if explicit_z:
             # On stairs the body rises tread by tread: extra bounce and pitch
             # synchronized with the horizontal distance traveled.
@@ -295,8 +295,17 @@ def build(items, platform, terrain=None, explicit_z=False, seed=0, rest=3.0,
                 np.clip(np.abs(c['slope']) / 0.3, 0.0, 1.0), 0.3 * RATE_HZ, mode='nearest')
             w = on_stairs * np.clip(speed / 0.3, 0.0, 1.0)
             sp = 2 * math.pi * s / g['stair_tread']
-            z = z + g['stair_bob'] * w * np.cos(sp)
-            pitch = pitch + math.radians(g['stair_pitch_deg']) * w * np.sin(sp)
+            dz = dz + g['stair_bob'] * w * np.cos(sp)
+            dpitch = dpitch + math.radians(g['stair_pitch_deg']) * w * np.sin(sp)
+        # The body oscillates about its own center (DOG_TROT['pivot_z'] above
+        # base_link, where the IMU is), not about base_link on the ground:
+        # move base_link so that the pivot only follows the bounce.
+        r = np.array([0.0, 0.0, g['pivot_z']])
+        R0 = Rotation.from_euler('ZYX', np.column_stack([yaw, pitch, roll]))
+        yaw, pitch, roll = yaw + dyaw, pitch + dpitch, roll + droll
+        R1 = Rotation.from_euler('ZYX', np.column_stack([yaw, pitch, roll]))
+        shift = R0.apply(r) - R1.apply(r)
+        x, y, z = x + shift[:, 0], y + shift[:, 1], z + dz + shift[:, 2]
 
     return dict(t=t, x=x, y=y, z=z, yaw=yaw, pitch=pitch, roll=roll)
 
