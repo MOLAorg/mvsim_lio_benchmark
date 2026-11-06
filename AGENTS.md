@@ -25,8 +25,9 @@ generated data is NOT in git; on the machine where it was made it lives in
    `MANIFEST.tsv`, `SHA256SUMS`). Do not edit generated tables by hand.
 
 Changing a world or trajectory invalidates its data: regenerate with
-`tools/generate.py --worlds <w> --force` (existing outputs are skipped
-otherwise), then rerun the manifest.
+`tools/generate.py --worlds <w> --trajs <t> --force` (a sequence whose rawlog
+and `.gt.tum` exist is skipped unless its log shows an incomplete run), then
+rerun the manifest. Always restrict `--force` with `--worlds`/`--trajs`.
 
 ## MVSim requirements
 
@@ -37,12 +38,16 @@ from `~/ros2_ws`. Never build the whole workspace there (other packages carry
 local experimental patches). `tools/env.sh` sources `~/ros2_ws/install`, or
 `$MVSIM_LIO_MVSIM_INSTALL` if set.
 
-All data (2026-11-06) was regenerated with develop at commit 7b203a52. The
-first release (2026-11-04) was made with a pre-review worktree of the same
-fixes; the review of #170 changed the trajectory interpolation to times
-relative to the first knot, which moves LiDAR points at the float-rounding
-level, so those files were not byte-identical to an upstream build and were
-all regenerated.
+Data provenance (details in the README): the first release (2026-11-04,
+13 worlds) was rendered with a pre-review worktree of the three fixes below.
+The dog sequences and nine stairwell files (`handheld_stairs`, all variants;
+`legged_floors`, the four `os1_32` variants) were rendered on 2026-11-06 with
+develop at commit 7b203a52. The review of #170 changed the trajectory
+interpolation to times relative to the first knot, so upstream renders of
+first-release sequences differ at the float-rounding level (LiDAR points,
+and the last printed digit of a few GT quaternions). Do not regenerate first-release sequences without the
+owner's approval. Their generator logs were lost on 2026-11-06 (deleted to
+queue a regeneration that was then cancelled), and are not in the manifest.
 
 - MRPT/mvsim#170, exact timestamps for the IMU finite differences.
   `mrpt::Clock::fromDouble()` truncated times. `CPose3DInterpolator` resolves
@@ -136,8 +141,9 @@ structured worlds give mm to cm errors; large errors in open_field, tunnel
 
 Shared server, also used for pinned benchmark sweeps: use `nice -n 10` and at
 most 16 cores (`--jobs 2 --cores-per-job 8 --first-core 72`), check `uptime`
-first, and keep scratch files in a private subdirectory. Each mvsim-dataset-gen job runs at 2.3 to 6.7x real time with
-8 threads (indoor worlds, where every ray hits, are the slowest); all 130
-sequences took about 40 minutes and 93 GB. MOLA validation of two variants
-(52 runs) took about 30 minutes. `make_docs.py --manifest` hashes everything
-in about 3 minutes.
+first, and keep scratch files in a private subdirectory. Each mvsim-dataset-gen
+job runs at about 2.3 to 6.7x real time with 8 threads (indoor worlds, where
+every ray hits, are the slowest; the dog worlds ran at about 3x under load).
+The first release (130 sequences) took about 40 minutes on 40 cores; the 20
+dog sequences about 30 minutes on 16 cores. `make_docs.py --manifest` hashes
+all 109 GB in a few minutes.

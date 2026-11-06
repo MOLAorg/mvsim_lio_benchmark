@@ -55,8 +55,12 @@ def run_one(world, traj, variant, out_dir, work_dir, cores, force):
     odir.mkdir(parents=True, exist_ok=True)
     rawlog = odir / f'{variant}.rawlog'
     log = odir / f'{variant}.gen.log'
-    if rawlog.exists() and log.exists() and 'Wrote vehicle ground truth' in log.read_text() \
-            and not force:
+    gt = odir / f'{variant}.gt.tum'
+    # Done if the rawlog and its ground truth exist, unless a log shows an
+    # incomplete run (first-release sequences have no log: see the README).
+    complete = rawlog.exists() and gt.exists() and (
+        not log.exists() or 'Wrote vehicle ground truth' in log.read_text())
+    if complete and not force:
         return f'{world}/{traj}/{variant}: exists, skipped'
     dense = work_dir / world / f'{traj}.dense.tum'
     cmd = ['taskset', '-c', cores, 'mvsim-dataset-gen', str(ROOT / 'worlds' / world / 'world.xml'),

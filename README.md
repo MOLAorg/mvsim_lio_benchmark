@@ -24,6 +24,7 @@ parameters are pinned in this repository, and the noise uses fixed seeds.
 <!-- BEGIN worlds -->
 | world | geometry and what it stresses | size | trajectories (carrier, duration) |
 |---|---|---|---|
+| [apartment_building](worlds/apartment_building/README.md) | A newly built three-storey apartment building (20 x 14 m, 3.0 m floor to floor, 2.75 m ceilings) with a dog-leg stair (two flights of 9 steps, 16.7 cm risers, 28 cm treads, a half landing and a central wall) in a central core, and two empty apartments per floor (living room, corridor, two bedrooms, kitchen, bathroom): bare walls, floors, ceilings, door and window openings, no furniture. Stresses stairs for a legged robot, identical floors (vertical ambiguity), small bare rooms with short ranges and door transitions. | 44 x 34 m | `dog_floors` (dog, 7:32, 273 m)<br>`dog_stairs` (dog, 3:21, 121 m) |
 | [campus](worlds/campus/README.md) | A 500 x 400 m university campus on gently rolling ground (+-3 m): nine buildings (one with a courtyard, a 25 m tower), a central plaza with a fountain and benches, a tree-lined ring road with lamp posts, about 300 trees (most in a park), a car park, and a fenced sports field with goals and bleachers. Mixed structure and vegetation at large scale; long sequences with loops. | 500 x 400 m | `long_tour` (ugv, 15:13, 1796 m)<br>`ring_drive` (car, 6:19, 2792 m) |
 | [forest](worlds/forest/README.md) | 200 x 200 m of hilly woodland (+-5 m, slopes up to 25%) with about 1350 trees (porous sphere-cluster crowns, branches, some conifers), bushes and fallen logs. Two cleared trails. Stresses unstructured, vegetation-like clutter with few planar surfaces, plus pitch/roll on slopes. | 200 x 200 m | `trail_loop` (legged, 5:40, 425 m)<br>`crossing` (ugv, 2:17, 195 m) |
 | [greenhouse](worlds/greenhouse/README.md) | A 96 x 40 m multi-span greenhouse (5 spans of 8 m, gutters at 4.5 m, gable roofs up to 5.8 m seen from inside), a post grid every 4 m, trusses, and long crop rows: porous tomato-like hedges in three spans and benches with pots in two. Repetitive along the 87 m aisles, where every section looks the same; indoor with a sloped ceiling. | 110 x 52 m | `aisles` (ugv, 6:07, 414 m)<br>`walk` (handheld, 4:14, 265 m) |
@@ -33,7 +34,8 @@ parameters are pinned in this repository, and the noise uses fixed seeds.
 | [parking_garage](worlds/parking_garage/README.md) | A three-level parking structure (64 x 40 m, levels at 0, 3.2 and 6.4 m, 2.9 m clearance) linked by two 20 m ramps (16% grade), with a column grid, parapets, an open roof level, ~60% occupied bays, and a few buildings and trees around it. Stresses multi-level geometry with ceilings, ramps (pitch), repetitive columns, and vertical drift between floors. | 120 x 90 m | `walk_down` (handheld, 4:01, 315 m)<br>`up_down` (car, 2:51, 565 m) |
 | [parking_lot](worlds/parking_lot/README.md) | A 160 x 120 m open-air parking lot in front of a 120 m long supermarket: five double rows of perpendicular bays (~70% occupied by cars of four sizes), curbed end islands with trees, tall light poles, cart corrals, hedges and a fence. Repetitive rows of similar cars; large open aisles. | 160 x 127 m | `search` (car, 3:42, 934 m)<br>`ugv_loop` (ugv, 5:10, 569 m) |
 | [rough_terrain](worlds/rough_terrain/README.md) | 260 x 260 m of steep, bumpy hills and valleys (+-10 m, slopes up to 26 deg, with 0.6 m bumps) with two craters, ~400 boulders of 0.3-1.6 m and a few dead trees. Stresses large, fast-changing pitch and roll, and a scene made almost only of terrain and rocks (no planes or poles). | 260 x 260 m | `hill_loop` (ugv, 6:58, 623 m)<br>`traverse_fast` (ugv, 1:57, 329 m) |
-| [stairwell](worlds/stairwell/README.md) | A three-storey building (30 x 16 m, 3.5 m floor to floor) with a U-shaped stairwell (two flights of 10 steps, 17.5 cm risers, 28 cm treads, 32 deg, per storey, plus mid landings), a corridor and furnished rooms on each floor, slabs with ceilings, and windows. Stresses stairs (fast z changes with large pitch for a legged carrier), narrow spaces, ceilings and multi-floor ambiguity (identical floor layouts). | 50 x 32 m | `legged_floors` (legged, 4:48, 207 m)<br>`handheld_stairs` (handheld, 2:40, 118 m) |
+| [stair_course](worlds/stair_course/README.md) | An urban courtyard (60 x 50 m, facades all around) with two stair types for a legged robot: a straight, 2 m wide outdoor flight of 14 steps (17 cm risers, 30 cm treads) up to a 2.38 m terrace with parapets, and a spiral stair (20 steps of 18 cm, one full turn around a central column, floating treads and railing posts) from the terrace up to a 6 m platform on columns. Stresses straight and helical stair climbing and descending, with large, continuous yaw on the spiral. | 64 x 54 m | `dog_course` (dog, 2:40, 110 m) |
+| [stairwell](worlds/stairwell/README.md) | A three-storey building (30 x 16 m, 3.5 m floor to floor) with a U-shaped stairwell (two flights of 10 steps, 17.5 cm risers, 28 cm treads, 32 deg, per storey, plus mid landings), a corridor and furnished rooms on each floor, slabs with ceilings, and windows. Stresses stairs (fast z changes with large pitch for a legged carrier), narrow spaces, ceilings and multi-floor ambiguity (identical floor layouts). | 50 x 32 m | `dog_floors` (dog, 3:49, 163 m)<br>`legged_floors` (legged, 4:48, 207 m)<br>`handheld_stairs` (handheld, 2:40, 118 m) |
 | [tunnel](worlds/tunnel/README.md) | A 735 m road tunnel (straight, a 300 m radius 45 deg bend, straight), 10 m wide and 6.5 m high with a stepped arch, raised walkways, lamps every 10 m, signs every 100 m, emergency niches every 150 m and jet fan pairs every 200 m, with portals and a turnaround area outside. The classic degenerate case: almost nothing constrains motion along the axis. | 834 x 440 m | `car_through` (car, 2:28, 1782 m)<br>`ugv_inspection` (ugv, 5:28, 798 m) |
 | [urban_street](worlds/urban_street/README.md) | A 3 x 3 grid of city blocks (~370 x 370 m) with 16 m wide streets, raised sidewalks with curbs, buildings 8-45 m tall with facade relief, a courtyard block, a park block, parked cars, street trees, lamp posts, benches, bins, bus stops, sign posts and traffic lights. Well-constrained, structured scene; the car route revisits streets (loops). | 370 x 370 m | `car_loops` (car, 5:48, 2935 m)<br>`pedestrian` (handheld, 8:23, 671 m) |
 | [warehouse](worlds/warehouse/README.md) | A 90 x 60 m logistics hall, 10 m high with a ceiling and roof trusses, six double rows of 8 m pallet racks (5 levels, randomly filled) separated by 3.6 m aisles, loading docks with door openings, staging areas with pallets and an office cabin. Indoor and repetitive: the aisles look alike, with long, nearly identical views along them. | 110 x 80 m | `aisles` (ugv, 3:38, 410 m)<br>`walk` (handheld, 3:20, 260 m) |
@@ -45,6 +47,10 @@ datasets do have. The plots show the top view of every primitive and the
 trajectories (circle: start), and the height of `base_link` over time.
 
 <!-- BEGIN gallery -->
+### apartment_building
+
+<img src="worlds/apartment_building/screenshot.png" width="49%"> <img src="worlds/apartment_building/trajectories.png" width="40%">
+
 ### campus
 
 <img src="worlds/campus/screenshot.png" width="49%"> <img src="worlds/campus/trajectories.png" width="40%">
@@ -81,6 +87,10 @@ trajectories (circle: start), and the height of `base_link` over time.
 
 <img src="worlds/rough_terrain/screenshot.png" width="49%"> <img src="worlds/rough_terrain/trajectories.png" width="40%">
 
+### stair_course
+
+<img src="worlds/stair_course/screenshot.png" width="49%"> <img src="worlds/stair_course/trajectories.png" width="40%">
+
 ### stairwell
 
 <img src="worlds/stairwell/screenshot.png" width="49%"> <img src="worlds/stairwell/trajectories.png" width="40%">
@@ -106,6 +116,8 @@ Every trajectory starts and ends with 3 s at rest (for IMU initialization).
 <!-- BEGIN sequences -->
 | sequence | carrier | duration | length | max speed | max yaw rate | max pitch / roll | z range |
 |---|---|---|---|---|---|---|---|
+| `apartment_building/dog_floors` | dog | 7:32 | 273 m | 1.4 m/s | 118 deg/s | 29 / 2 deg | 6.0 m |
+| `apartment_building/dog_stairs` | dog | 3:21 | 121 m | 1.6 m/s | 122 deg/s | 29 / 2 deg | 6.0 m |
 | `campus/long_tour` | ugv | 15:13 | 1796 m | 2.0 m/s | 91 deg/s | 2 / 2 deg | 5.6 m |
 | `campus/ring_drive` | car | 6:19 | 2792 m | 8.0 m/s | 47 deg/s | 2 / 2 deg | 4.2 m |
 | `forest/trail_loop` | legged | 5:40 | 425 m | 1.5 m/s | 22 deg/s | 12 / 11 deg | 8.0 m |
@@ -124,6 +136,8 @@ Every trajectory starts and ends with 3 s at rest (for IMU initialization).
 | `parking_lot/ugv_loop` | ugv | 5:10 | 569 m | 2.0 m/s | 143 deg/s | 0 / 0 deg | 0.0 m |
 | `rough_terrain/hill_loop` | ugv | 6:58 | 623 m | 1.6 m/s | 72 deg/s | 22 / 19 deg | 14.1 m |
 | `rough_terrain/traverse_fast` | ugv | 1:57 | 329 m | 3.2 m/s | 35 deg/s | 22 / 13 deg | 11.4 m |
+| `stair_course/dog_course` | dog | 2:40 | 110 m | 1.5 m/s | 134 deg/s | 30 / 2 deg | 6.0 m |
+| `stairwell/dog_floors` | dog | 3:49 | 163 m | 1.4 m/s | 100 deg/s | 30 / 2 deg | 7.0 m |
 | `stairwell/legged_floors` | legged | 4:48 | 207 m | 1.0 m/s | 87 deg/s | 32 / 1 deg | 7.0 m |
 | `stairwell/handheld_stairs` | handheld | 2:40 | 118 m | 1.2 m/s | 85 deg/s | 7 / 1 deg | 3.5 m |
 | `tunnel/car_through` | car | 2:28 | 1782 m | 15.0 m/s | 32 deg/s | 0 / 0 deg | 0.0 m |
@@ -133,7 +147,7 @@ Every trajectory starts and ends with 3 s at rest (for IMU initialization).
 | `warehouse/aisles` | ugv | 3:38 | 410 m | 2.0 m/s | 82 deg/s | 0 / 0 deg | 0.0 m |
 | `warehouse/walk` | handheld | 3:20 | 260 m | 1.4 m/s | 88 deg/s | 1 / 2 deg | 0.1 m |
 
-Total: 26 trajectories, 130 minutes, per sensor variant.
+Total: 30 trajectories, 148 minutes, per sensor variant.
 <!-- END sequences -->
 
 ## Sensors and variants
@@ -199,7 +213,7 @@ depends on the carrier platform the trajectory emulates:
 | `ugv` | 0.00 m | 0.75 m | up to 3 m/s, in-place turns and spins, tilted by the terrain under a 0.8 x 0.6 m footprint |
 | `legged` | 0.35 m | 1.10 m | up to 1.8 m/s, gait bobbing (1.2 cm) and sway (1 deg), pitched along stairs |
 | `handheld` | 0.75 m | 1.50 m | up to 1.8 m/s, gait bobbing (2.5 cm) and sway (1.5 deg), slow look-around yaw |
-| `dog` | 0.00 m | 0.75 m | quadruped robot: up to 1.5 m/s on the flat and 0.3 to 0.6 m/s on stairs; 2 Hz trot with a 0.8 cm body bounce at 4 Hz, roll (2 deg), pitch (1.5 deg) and yaw (1 deg) oscillations; on stairs an extra bounce (1.5 cm) and pitch (2 deg) per tread, and the body pitched at 85% of the stair slope; gait rotations pivot about the body center, 0.45 m above `base_link` |
+| `dog` | 0.00 m | 0.75 m | quadruped robot: up to 1.5 m/s (body center; the ground-level `base_link` sways slightly faster) on the flat and 0.3 to 0.6 m/s on stairs; 2 Hz trot with a 0.8 cm body bounce at 4 Hz, roll (2 deg), pitch (1.5 deg) and yaw (1 deg) oscillations; on stairs an extra bounce (1.5 cm) and pitch (2 deg) per tread, and the body pitched at 85% of the stair slope; gait rotations pivot about the body center, 0.45 m above `base_link` |
 
 Stair types: straight flights (`stair_course`), a spiral stair
 (`stair_course`), U-shaped stairs with a well (`stairwell`) and dog-leg stairs
@@ -240,7 +254,7 @@ nearest-stamp association with the 10 Hz files.
 ## How to regenerate
 
 Requirements: Python 3 with numpy, scipy, matplotlib and Pillow, and a build
-of MVSim's `develop` branch (the data was generated with commit 7b203a52) that
+of MVSim's `develop` branch that
 includes MRPT/mvsim #168, #170 and #171 (see [AGENTS.md](AGENTS.md)): exact
 IMU timestamps (without them the simulated accelerometer is wrong by several
 m/s^2), IMU kinematics at the IMU mounting pose (lever arm), and a heightfield
@@ -260,13 +274,39 @@ tools/make_docs.py --manifest      # README tables, MANIFEST.tsv, SHA256SUMS
 ```
 
 `tools/generate.py --worlds forest --trajs trail_loop --variants os1_32-noisy-rolling`
-renders a single sequence. Outputs are byte-for-byte reproducible.
+renders a single sequence. Outputs are byte-for-byte reproducible with the same
+MVSim build.
+
+### Data provenance
+
+Two MVSim builds produced the published files:
+
+- The 2026-11-04 release (the first 13 worlds) was rendered with a local
+  build of the three fixes before their upstream review.
+- The robot dog sequences (`apartment_building/*`, `stair_course/*`,
+  `stairwell/dog_floors`) were rendered on 2026-11-06 with upstream MVSim
+  `develop` at commit 7b203a52, which merged those fixes.
+- Nine files of the first release were also re-rendered with 7b203a52:
+  `stairwell/handheld_stairs` (all five variants) and
+  `stairwell/legged_floors` (the four `os1_32` variants).
+  `stairwell/legged_floors/vlp16-noisy-rolling` is still the 2026-11-04 file.
+
+The review of the timestamp fix made the trajectory interpolation use times
+relative to the first knot. Upstream renders of the first-release sequences
+therefore differ from the 2026-11-04 files only at the float-rounding level:
+in the LiDAR points, and in a few ground-truth lines in the last printed
+digit (1e-6) of a quaternion component. Regenerating the
+first-release files with upstream MVSim gives files that are equivalent but
+not byte-identical. The generator logs (`*.gen.log`) of the first-release
+files that were not re-rendered were lost, and are not in the manifest.
+
 
 <!-- BEGIN gentime -->
-Generation speed (simulated seconds per wall-clock second, 8 cores per job, Xeon E5-2696 v4 at 2.2 GHz), per world and variant:
+Generation speed (simulated seconds per wall-clock second, 8 cores per job, Xeon E5-2696 v4 at 2.2 GHz, on a shared machine), per world and variant:
 
 | world | os1_32-clean-global | os1_32-clean-rolling | os1_32-noisy-global | os1_32-noisy-rolling | vlp16-noisy-rolling |
 |---|---|---|---|---|---|
+| apartment_building | 3.6x | 3.1x | 3.1x | 3.0x | 3.2x |
 | campus | 4.7x | 4.7x | 4.7x | 4.5x | 4.4x |
 | forest | 2.8x | 2.8x | 2.8x | 2.8x | 2.8x |
 | greenhouse | 2.9x | 2.9x | 2.5x | 2.4x | 2.7x |
@@ -276,7 +316,8 @@ Generation speed (simulated seconds per wall-clock second, 8 cores per job, Xeon
 | parking_garage | 3.5x | 3.5x | 3.0x | 3.0x | 3.2x |
 | parking_lot | 6.7x | 6.6x | 3.9x | 3.9x | 4.4x |
 | rough_terrain | 4.9x | 4.9x | 4.8x | 4.9x | 4.7x |
-| stairwell | 3.0x | 2.8x | 2.8x | 2.7x | 3.0x |
+| stair_course | 3.4x | 3.2x | 3.2x | 3.2x | 3.4x |
+| stairwell | 3.1x | 3.1x | 2.9x | 2.9x | 3.1x |
 | tunnel | 5.1x | 5.1x | 3.1x | 3.1x | 3.3x |
 | urban_street | 3.8x | 3.7x | 3.1x | 3.1x | 3.2x |
 | warehouse | 2.6x | 2.6x | 2.3x | 2.3x | 2.5x |
@@ -295,6 +336,8 @@ distance traveled.
 <!-- BEGIN validation -->
 | sequence | os1_32-clean-global: APE SE(3) / drift | os1_32-noisy-rolling: APE SE(3) / drift |
 |---|---|---|
+| `apartment_building/dog_floors` | 0.11 m / 0.00 % | 0.14 m / 0.00 % |
+| `apartment_building/dog_stairs` | 0.11 m / 0.00 % | 0.13 m / 0.00 % |
 | `campus/long_tour` | 10.97 m / 1.66 % | 9.77 m / 1.72 % |
 | `campus/ring_drive` | 22.91 m / 2.65 % | 38.73 m / 3.68 % |
 | `forest/crossing` | 0.01 m / 0.44 % | 0.01 m / 0.41 % |
@@ -313,8 +356,10 @@ distance traveled.
 | `parking_lot/ugv_loop` | 0.01 m / 0.00 % | 0.07 m / 0.05 % |
 | `rough_terrain/hill_loop` | 1.21 m / 0.19 % | 1.65 m / 0.32 % |
 | `rough_terrain/traverse_fast` | 0.14 m / 0.13 % | 0.22 m / 0.80 % |
-| `stairwell/handheld_stairs` | 0.01 m / 0.00 % | 0.07 m / 0.00 % |
-| `stairwell/legged_floors` | 0.13 m / 0.00 % | 0.12 m / 0.01 % |
+| `stair_course/dog_course` | 0.04 m / 0.00 % | 0.07 m / 0.01 % |
+| `stairwell/dog_floors` | 0.14 m / 0.00 % | 0.16 m / 0.01 % |
+| `stairwell/handheld_stairs` | 0.01 m / 0.00 % | 0.06 m / 0.01 % |
+| `stairwell/legged_floors` | 0.13 m / 0.00 % | 0.13 m / 0.00 % |
 | `tunnel/car_through` | 1.27 m / 0.03 % | 2.80 m / 0.29 % |
 | `tunnel/ugv_inspection` | 8.83 m / 4.23 % | 11.98 m / 5.33 % |
 | `urban_street/car_loops` | 0.02 m / 0.00 % | 1.16 m / 0.11 % |
@@ -341,12 +386,18 @@ Reading the table:
   gait.
 - The greenhouse and orchard rows, although repetitive, turned out easy for
   this scan-to-map odometry.
+- The robot dog sequences (stairs of all four types, bare apartment rooms)
+  stay at 4 to 16 cm APE and below 0.02% drift, also with noise: trot and
+  stair motion do not break this odometry, which de-skews with a
+  constant-velocity model. Their IMU carries the gait (about 2.6 m/s^2 std
+  vertically on flat ground), which is what LiDAR-inertial methods have to
+  cope with.
 
 First difficulty ranking (noisy rolling shutter, end-point drift):
 
 | class | sequences |
 |---|---|
-| easy (< 0.1%) | `office/*`, `greenhouse/*`, `stairwell/*`, `warehouse/aisles`, `parking_garage/up_down`, `parking_lot/*`, `orchard/rows` |
+| easy (< 0.1%) | `apartment_building/*`, `stair_course/*`, `office/*`, `greenhouse/*`, `stairwell/*`, `warehouse/aisles`, `parking_garage/up_down`, `parking_lot/*`, `orchard/rows` |
 | moderate (0.1% to 1.2%) | `urban_street/*`, `parking_garage/walk_down`, `warehouse/walk`, `tunnel/car_through`, `rough_terrain/*`, `forest/crossing`, `orchard/headland` |
 | hard (> 1.5%) | `campus/*`, `forest/trail_loop`, `tunnel/ugv_inspection`, `open_field/*` |
 
@@ -359,20 +410,22 @@ their sizes and SHA-256 checksums is in [MANIFEST.tsv](MANIFEST.tsv) and
 <!-- BEGIN manifest -->
 | world | rawlogs | files | size |
 |---|---|---|---|
-| campus | 10 | 42 | 12.7 GB |
-| forest | 10 | 42 | 7.2 GB |
-| greenhouse | 10 | 42 | 9.4 GB |
-| office | 10 | 42 | 5.5 GB |
-| open_field | 10 | 42 | 5.5 GB |
-| orchard | 10 | 42 | 8.9 GB |
-| parking_garage | 10 | 42 | 5.3 GB |
-| parking_lot | 10 | 42 | 4.4 GB |
-| rough_terrain | 10 | 42 | 5.0 GB |
-| stairwell | 10 | 42 | 6.9 GB |
-| tunnel | 10 | 42 | 5.5 GB |
-| urban_street | 10 | 42 | 10.6 GB |
-| warehouse | 10 | 42 | 6.1 GB |
-| **total** | 130 | 546 | **93.0 GB** |
+| apartment_building | 10 | 42 | 10.1 GB |
+| campus | 10 | 32 | 12.7 GB |
+| forest | 10 | 32 | 7.2 GB |
+| greenhouse | 10 | 32 | 9.4 GB |
+| office | 10 | 32 | 5.5 GB |
+| open_field | 10 | 32 | 5.5 GB |
+| orchard | 10 | 32 | 8.9 GB |
+| parking_garage | 10 | 32 | 5.3 GB |
+| parking_lot | 10 | 32 | 4.4 GB |
+| rough_terrain | 10 | 32 | 5.0 GB |
+| stair_course | 5 | 21 | 2.4 GB |
+| stairwell | 15 | 62 | 10.5 GB |
+| tunnel | 10 | 32 | 5.5 GB |
+| urban_street | 10 | 32 | 10.6 GB |
+| warehouse | 10 | 32 | 6.1 GB |
+| **total** | 150 | 509 | **109.1 GB** |
 <!-- END manifest -->
 
 ## Download

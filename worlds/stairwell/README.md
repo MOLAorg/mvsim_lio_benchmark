@@ -11,6 +11,7 @@ Extent of the plotted area: 50 x 32 m; 441 ray-traced primitives.
 
 | trajectory | carrier | duration | length | max speed | max pitch / roll | z range | description |
 |---|---|---|---|---|---|---|---|
+| `dog_floors` | dog | 3:49 | 163 m | 1.4 m/s | 30 / 2 deg | 7.0 m | Robot dog: up both storeys by the U-shaped stairs, a room on the first floor, and straight back down |
 | `legged_floors` | legged | 4:48 | 207 m | 1.0 m/s | 32 / 1 deg | 7.0 m | Legged robot: up two storeys by the stairs, rooms, and back down, body pitched with the stairs |
 | `handheld_stairs` | handheld | 2:40 | 118 m | 1.2 m/s | 7 / 1 deg | 3.5 m | Handheld rig, upright: up one storey and back down |
 

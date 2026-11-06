@@ -135,7 +135,8 @@ def main():
 
     if a.manifest:
         files = sorted(p for p in data.glob('*/*/*') if p.is_file() and p.suffix in
-                       ('.rawlog', '.tum', '.log'))
+                       ('.rawlog', '.tum', '.log') and not p.relative_to(data).parts[0]
+                       .startswith('.'))
         with ThreadPoolExecutor(max_workers=16) as ex:
             hashes = list(ex.map(sha256, files))
         with open(ROOT / 'MANIFEST.tsv', 'w') as f:
@@ -170,11 +171,21 @@ def main():
         dur = next(d['stats'][t]['duration'] for d in descs if d['name'] == w)
         gt.setdefault(w, {}).setdefault(v, []).append((float(m.group(1)), dur))
     if gt:
-        variants = [v for v in VARIANT_ORDER if any(v in x for x in gt.values())]
+        # Worlds whose generator logs are gone keep their previous rows.
+        old_rows = {}
+        m = re.search(r'<!-- BEGIN gentime -->\n(.*?)<!-- END gentime -->', readme, re.S)
+        for line in (m.group(1).splitlines() if m else []):
+            cells = [c.strip() for c in line.strip('|').split('|')]
+            if line.startswith('| ') and cells[0] not in ('world',) and cells[0] not in gt:
+                old_rows[cells[0]] = line
+        variants = list(VARIANT_ORDER)
         rows = ['Generation speed (simulated seconds per wall-clock second, 8 cores per job, '
-                'Xeon E5-2696 v4 at 2.2 GHz), per world and variant:', '',
+                'Xeon E5-2696 v4 at 2.2 GHz, on a shared machine), per world and variant:', '',
                 '| world | ' + ' | '.join(variants) + ' |', '|---|' + '---|' * len(variants)]
-        for w in sorted(gt):
+        for w in sorted(set(gt) | set(old_rows)):
+            if w not in gt:
+                rows.append(old_rows[w])
+                continue
             cells = []
             for v in variants:
                 runs = gt[w].get(v, [])
@@ -185,7 +196,9 @@ def main():
     vfile = data / 'validation' / 'summary.json'
     if vfile.exists():
         res = json.loads(vfile.read_text())
-        variants = [v for v in VARIANT_ORDER if any(k.endswith('/' + v) for k in res)]
+        # The table shows the two variants validated for every sequence; other
+        # variants validated for single files stay in summary.json.
+        variants = ['os1_32-clean-global', 'os1_32-noisy-rolling']
         rows = ['| sequence | ' + ' | '.join(f'{v}: APE SE(3) / drift' for v in variants) + ' |',
                 '|---|' + '---|' * len(variants)]
         seqs = sorted({'/'.join(k.split('/')[:2]) for k in res})
