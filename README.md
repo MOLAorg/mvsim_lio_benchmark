@@ -192,7 +192,11 @@ Rigs (`rigs/*.rig.xml`, sensor parameters pinned in the files):
 - **Wheel odometry** (`odom`): planar odometry at 10 Hz derived from the
   ground truth (1% relative noise in the noisy variants). It is written for
   every carrier, including the handheld, legged and dog ones, where it is not
-  physically meaningful: do not use it for those sequences.
+  physically meaningful: do not use it for those sequences. It is the
+  horizontal projection of the path, so on slopes and stairs it also disagrees
+  with any body-frame motion estimate. MOLA's state-estimation smoother fuses
+  every odometry label by default: for these carriers, set
+  `do_process_odometry_labels_re: "^$"` in its YAML.
 - **Intensity**: not generated (MVSim has no material model).
 
 ### Frames and extrinsics
