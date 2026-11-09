@@ -1,0 +1,63 @@
+<!--
+  mvsim_lio_benchmark sensor rig "qt64": Hesai QT64 style: 64 rings over 104.2 deg, 600 columns, 10 Hz, 0.1-60 m, plus a 200 Hz IMU.
+  Pinned sensor parameters: this file does
+  not include MVSim's definitions/*.xml, so upstream changes there do not
+  alter the benchmark.
+
+  Frames (all rotations are identity):
+    base_link  the pose given by the trajectory and the *.gt.tum files
+    lidar1     (0, 0, 0.75) m in base_link
+    imu1       (0.05, -0.03, 0.45) m in base_link
+  mvsim-dataset-gen never steps physics: the dynamics block below is only
+  required by the XML schema.
+-->
+<vehicle:class name="lio_rig">
+	<dynamics class="differential">
+		<l_wheel pos="0.0  0.3" mass="4.0" width="0.10" diameter="0.30" />
+		<r_wheel pos="0.0 -0.3" mass="4.0" width="0.10" diameter="0.30" />
+		<chassis mass="15.0" zmin="0.05" zmax="0.30"> </chassis>
+		<controller class="twist_ideal"> </controller>
+	</dynamics>
+	<friction class="default"> <mu>0.8</mu> </friction>
+</vehicle:class>
+
+<vehicle name="r1" class="lio_rig">
+	<init_pose>0 0 0</init_pose>
+	<sensor class="lidar3d" name="lidar1">
+		<!-- Hesai QT64 style: 64 rings over 104.2 deg, 600 columns, 10 Hz, 0.1-60 m -->
+		<pose_3d>0.0 0.0 0.75 0.0 0.0 0.0</pose_3d>
+		<vert_nrays>64</vert_nrays>
+		<vert_fov_degrees>104.2</vert_fov_degrees>
+		<horz_nrays>600</horz_nrays>
+		<sensor_period>0.1</sensor_period>
+		<min_range>0.1</min_range>
+		<max_range>60.0</max_range>
+		<!-- Range noise std [m]; zeroed by the "clean" variants. -->
+		<range_std_noise>${MVSIM_LIDAR_RANGE_STD|0.02}</range_std_noise>
+		<!-- Realistic error model (mvsim-dataset-gen only), set by the "real"
+		     noise level of tools/generate.py; zero for "noisy" and "clean". -->
+		<range_std_noise_per_meter>${MVSIM_LIDAR_RANGE_STD_PER_M|0}</range_std_noise_per_meter>
+		<beam_divergence_deg>${MVSIM_LIDAR_BEAM_DIVERGENCE_DEG|0}</beam_divergence_deg>
+		<max_incidence_deg>${MVSIM_LIDAR_MAX_INCIDENCE_DEG|0}</max_incidence_deg>
+		<mixed_pixel_probability>${MVSIM_LIDAR_MIXED_PIXEL_P|0}</mixed_pixel_probability>
+		<beam_elevation_std_deg>${MVSIM_LIDAR_BEAM_ELEVATION_STD_DEG|0}</beam_elevation_std_deg>
+		<beam_azimuth_std_deg>${MVSIM_LIDAR_BEAM_AZIMUTH_STD_DEG|0}</beam_azimuth_std_deg>
+		<beam_range_bias_std>${MVSIM_LIDAR_BEAM_RANGE_BIAS_STD|0}</beam_range_bias_std>
+		<calibration_seed>${MVSIM_LIDAR_CALIB_SEED|0}</calibration_seed>
+		<generate_intensity>false</generate_intensity>
+		<horz_resolution_factor>1.0</horz_resolution_factor>
+		<vert_resolution_factor>1.0</vert_resolution_factor>
+	</sensor>
+	<sensor class="imu" name="imu1">
+		<pose_3d>0.05 -0.03 0.45 0.0 0.0 0.0</pose_3d>
+		<sensor_period>0.005</sensor_period>
+		<!-- Per-sample white noise std (200 Hz), and bias random walk std
+		     [rad/s/sqrt(s), m/s^2/sqrt(s)]. Zeroed by the "clean" variants
+		     (noiseless option of mvsim-dataset-gen). -->
+		<angular_velocity_white_noise_std_noise>3.7e-3</angular_velocity_white_noise_std_noise>
+		<linear_acceleration_white_noise_std_noise>3.2e-2</linear_acceleration_white_noise_std_noise>
+		<angular_velocity_random_walk_std_noise>2.0e-5</angular_velocity_random_walk_std_noise>
+		<linear_acceleration_random_walk_std_noise>1.0e-3</linear_acceleration_random_walk_std_noise>
+		<measure_orientation>false</measure_orientation>
+	</sensor>
+</vehicle>

@@ -16,7 +16,9 @@ Usage: tools/generate.py [--jobs 5] [--cores-per-job 8] [--first-core 0]
                          [--worlds a,b] [--variants os1_32-noisy-rolling,...] [--force]
 """
 import argparse
+import json
 import os
+import random
 import shutil
 import subprocess
 import sys
@@ -39,6 +41,30 @@ VARIANTS = ['os1_32-clean-global', 'os1_32-clean-rolling', 'os1_32-noisy-global'
 
 def seed_for(world, traj):
     return zlib.crc32(f'{world}/{traj}'.encode()) & 0x7fffffff
+
+
+# The "real" noise level: a realistic LiDAR error model (range noise growing
+# with range and incidence, grazing dropouts, mixed returns at depth edges,
+# per-beam calibration errors), with its parameters drawn per sequence and
+# rig, so that no single sensor's error profile is learned.
+REAL_ERROR_RANGES = {
+    'MVSIM_LIDAR_RANGE_STD': (0.005, 0.02),
+    'MVSIM_LIDAR_RANGE_STD_PER_M': (0.0, 3e-4),
+    'MVSIM_LIDAR_BEAM_DIVERGENCE_DEG': (0.05, 0.3),
+    'MVSIM_LIDAR_MAX_INCIDENCE_DEG': (78.0, 88.0),
+    'MVSIM_LIDAR_MIXED_PIXEL_P': (0.1, 0.5),
+    'MVSIM_LIDAR_BEAM_ELEVATION_STD_DEG': (0.0, 0.04),
+    'MVSIM_LIDAR_BEAM_AZIMUTH_STD_DEG': (0.0, 0.04),
+    'MVSIM_LIDAR_BEAM_RANGE_BIAS_STD': (0.0, 0.01),
+}
+
+
+def real_error_env(world, traj, rig):
+    """Error model parameters of a "real" sequence, reproducible from its name."""
+    r = random.Random(zlib.crc32(f'{world}/{traj}/{rig}'.encode()))
+    env = {k: f'{r.uniform(lo, hi):.6g}' for k, (lo, hi) in REAL_ERROR_RANGES.items()}
+    env['MVSIM_LIDAR_CALIB_SEED'] = str((seed_for(world, traj) ^ zlib.crc32(rig.encode())) & 0x7fffffff)
+    return env
 
 
 def list_sequences(worlds):
@@ -70,6 +96,10 @@ def run_one(world, traj, variant, out_dir, work_dir, cores, force):
         cmd.append('--noiseless')
     env = dict(os.environ, MVSIM_LIO_RIG=str(ROOT / 'rigs' / f'{rig}.rig.xml'),
                TBB_NUM_THREADS=str(len(expand(cores))))
+    if noise == 'real':
+        errors = real_error_env(world, traj, rig)
+        env.update(errors)
+        (odir / f'{variant}.errors.json').write_text(json.dumps(errors, indent=1) + '\n')
     t0 = time.time()
     with open(log, 'w') as f:
         f.write('# ' + ' '.join(cmd) + '\n')

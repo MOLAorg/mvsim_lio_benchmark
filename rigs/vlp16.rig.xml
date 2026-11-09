@@ -33,7 +33,17 @@
 		<min_range>0.4</min_range>
 		<max_range>100.0</max_range>
 		<!-- Range noise std [m]; zeroed by the "clean" variants. -->
-		<range_std_noise>0.02</range_std_noise>
+		<range_std_noise>${MVSIM_LIDAR_RANGE_STD|0.02}</range_std_noise>
+		<!-- Realistic error model (mvsim-dataset-gen only), set by the "real"
+		     noise level of tools/generate.py; zero for "noisy" and "clean". -->
+		<range_std_noise_per_meter>${MVSIM_LIDAR_RANGE_STD_PER_M|0}</range_std_noise_per_meter>
+		<beam_divergence_deg>${MVSIM_LIDAR_BEAM_DIVERGENCE_DEG|0}</beam_divergence_deg>
+		<max_incidence_deg>${MVSIM_LIDAR_MAX_INCIDENCE_DEG|0}</max_incidence_deg>
+		<mixed_pixel_probability>${MVSIM_LIDAR_MIXED_PIXEL_P|0}</mixed_pixel_probability>
+		<beam_elevation_std_deg>${MVSIM_LIDAR_BEAM_ELEVATION_STD_DEG|0}</beam_elevation_std_deg>
+		<beam_azimuth_std_deg>${MVSIM_LIDAR_BEAM_AZIMUTH_STD_DEG|0}</beam_azimuth_std_deg>
+		<beam_range_bias_std>${MVSIM_LIDAR_BEAM_RANGE_BIAS_STD|0}</beam_range_bias_std>
+		<calibration_seed>${MVSIM_LIDAR_CALIB_SEED|0}</calibration_seed>
 		<generate_intensity>false</generate_intensity>
 		<horz_resolution_factor>1.0</horz_resolution_factor>
 		<vert_resolution_factor>1.0</vert_resolution_factor>
