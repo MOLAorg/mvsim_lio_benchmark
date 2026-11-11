@@ -24,7 +24,8 @@ sys.path.insert(0, str(ROOT / 'tools'))
 from build_worlds import load_world_module  # noqa: E402
 
 VARIANT_ORDER = ['os1_32-clean-global', 'os1_32-clean-rolling', 'os1_32-noisy-global',
-                 'os1_32-noisy-rolling', 'vlp16-noisy-rolling']
+                 'os1_32-noisy-rolling', 'os1_32-real-global', 'os1_32-real-rolling',
+                 'vlp16-noisy-rolling']
 
 
 def world_names():
@@ -135,7 +136,7 @@ def main():
 
     if a.manifest:
         files = sorted(p for p in data.glob('*/*/*') if p.is_file() and p.suffix in
-                       ('.rawlog', '.tum', '.log') and not p.relative_to(data).parts[0]
+                       ('.rawlog', '.tum', '.log', '.json') and not p.relative_to(data).parts[0]
                        .startswith('.'))
         with ThreadPoolExecutor(max_workers=16) as ex:
             hashes = list(ex.map(sha256, files))

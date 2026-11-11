@@ -20,9 +20,16 @@ generated data is NOT in git; on the machine where it was made it lives in
    (`densify.py`), then runs `mvsim-dataset-gen` per variant, choosing the
    sensor rig with `MVSIM_LIO_RIG=rigs/<rig>.rig.xml` (the world XML includes
    `$env{MVSIM_LIO_RIG}`). Seeds depend only on (world, trajectory).
+   Noise levels: `clean`, `noisy` (2 cm Gaussian), `real` (the realistic
+   LiDAR error model, parameters drawn per (world, trajectory, rig) from
+   `REAL_ERROR_RANGES` and written to `<variant>.errors.json`). The published
+   set is `VARIANTS` (seven variants); other rigs are defined but not rendered.
 4. `tools/screenshot.py`, `tools/validate_mola.py`, `tools/make_docs.py`
    (README tables between `<!-- BEGIN/END x -->` markers, per-world READMEs,
    `MANIFEST.tsv`, `SHA256SUMS`). Do not edit generated tables by hand.
+5. `tools/map_export` (C++, `bench-map-export`): exact reference maps (clean
+   sweeps at `gt_200hz.tum`) or maps implied by an estimated trajectory.
+   `tools/make_banner.py` renders `docs/banner.{gif,mp4}` from such maps.
 
 Changing a world or trajectory invalidates its data: regenerate with
 `tools/generate.py --worlds <w> --trajs <t> --force` (a sequence whose rawlog
@@ -45,7 +52,8 @@ The dog sequences and nine stairwell files (`handheld_stairs`, all variants;
 develop at commit 7b203a52. The review of #170 changed the trajectory
 interpolation to times relative to the first knot, so upstream renders of
 first-release sequences differ at the float-rounding level (LiDAR points,
-and the last printed digit of a few GT quaternions). Do not regenerate first-release sequences without the
+and the last printed digit of a few GT quaternions). The `os1_32-real-*` variants were rendered on 2026-11-11
+with develop at 5c7e3a86. Do not regenerate first-release sequences without the
 owner's approval. Their generator logs were lost on 2026-11-06 (deleted to
 queue a regeneration that was then cancelled), and are not in the manifest.
 

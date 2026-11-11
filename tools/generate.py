@@ -33,10 +33,11 @@ sys.path.insert(0, str(ROOT / 'tools'))
 
 from mvsim_lio import densify  # noqa: E402
 
-# Default variant set: all four (noise x shutter) combinations for the main
-# rig, and the realistic one for the second rig.
+# Default variant set: all six (noise x shutter) combinations for the main
+# rig, and the noisy rolling-shutter one for the second rig.
 VARIANTS = ['os1_32-clean-global', 'os1_32-clean-rolling', 'os1_32-noisy-global',
-            'os1_32-noisy-rolling', 'vlp16-noisy-rolling']
+            'os1_32-noisy-rolling', 'os1_32-real-global', 'os1_32-real-rolling',
+            'vlp16-noisy-rolling']
 
 
 def seed_for(world, traj):

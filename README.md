@@ -1,9 +1,27 @@
 # mvsim_lio_benchmark
 
+<p align="center"><img src="docs/banner.gif" width="100%" alt="Exact ground-truth maps and trajectories of six of the worlds"></p>
+
+<p align="center"><sub>Exact maps (noise-free sweeps at the true poses) revealed along the ground-truth trajectory; inset: the MVSim world. <a href="docs/banner.mp4">MP4 version</a>.</sub></p>
+
 A simulated LiDAR-inertial benchmark: 15 [MVSim](https://github.com/MRPT/mvsim)
-worlds, 30 predefined 6-DoF trajectories, and the scripts that render them to
-MRPT `.rawlog` datasets (rotating 3D LiDAR with per-point timestamps, 200 Hz
-IMU, wheel odometry) with exact ground truth.
+worlds, 30 predefined 6-DoF trajectories (20.1 km, 148 minutes) of five
+carriers, and the scripts that render them to MRPT `.rawlog` datasets
+(rotating 3D LiDAR with per-point timestamps, 200 Hz IMU, wheel odometry) with
+exact ground truth.
+
+- **Exact ground truth**: the trajectory is the simulator's input (a C2
+  spline you can evaluate at any time), and the map is the world's analytic
+  geometry. No GNSS/INS, total station or TLS registration error, no
+  extrinsic calibration or time synchronization error.
+- **Paired variants**: every trajectory is rendered with global and rolling
+  shutter, and with three noise levels (noise-free, Gaussian, and a
+  realistic LiDAR error model), sharing the same random seeds, so that each
+  factor can be studied on its own.
+- **Realistic sensor errors**: range noise growing with range, grazing-angle
+  dropouts, beam divergence, mixed pixels at depth edges and per-beam
+  calibration errors, with parameters drawn per sequence; MEMS-grade IMU
+  noise with bias random walk.
 
 Uses:
 
@@ -152,7 +170,7 @@ Total: 30 trajectories, 148 minutes, per sensor variant.
 
 ## Sensors and variants
 
-Each trajectory is rendered with these five variants (files are named
+Each trajectory is rendered with these seven variants (files are named
 `<rig>-<noise>-<shutter>`):
 
 | variant | LiDAR | LiDAR noise | IMU noise | shutter |
@@ -161,14 +179,57 @@ Each trajectory is rendered with these five variants (files are named
 | `os1_32-clean-rolling` | OS1-32 style | none | none | rolling |
 | `os1_32-noisy-global` | OS1-32 style | 2 cm | MEMS (below) | global |
 | `os1_32-noisy-rolling` | OS1-32 style | 2 cm | MEMS (below) | rolling |
+| `os1_32-real-global` | OS1-32 style | realistic error model (below) | MEMS (below) | global |
+| `os1_32-real-rolling` | OS1-32 style | realistic error model (below) | MEMS (below) | rolling |
 | `vlp16-noisy-rolling` | VLP-16 style | 2 cm | MEMS (below) | rolling |
 
-Rigs (`rigs/*.rig.xml`, sensor parameters pinned in the files):
+The `real` variants are the closest to a real sensor and the intended
+default for benchmarking; the others isolate one factor at a time. The
+noise seed depends only on the sequence, so the variants of a sequence are
+paired (e.g. `-global` and `-rolling` share their error parameters).
 
-| rig | rings | vertical FOV | columns | rate | range | range noise std |
+Rigs (`rigs/*.rig.xml`, sensor parameters pinned in the files). The first two
+are rendered in the published data; the others are defined for
+`tools/generate.py` and used by derived works, but not rendered here:
+
+| rig | rings | vertical FOV | columns | rate | range | LiDAR height on `base_link` |
 |---|---|---|---|---|---|---|
-| `os1_32` | 32, uniform | 45 deg (+-22.5) | 1024 | 10 Hz | 0.5 to 60 m | 0.02 m |
-| `vlp16` | 16, uniform | 30 deg (+-15) | 1808 | 10 Hz | 0.4 to 100 m | 0.02 m |
+| `os1_32` | 32, uniform | 45 deg (+-22.5) | 1024 | 10 Hz | 0.5 to 60 m | 0.75 m |
+| `vlp16` | 16, uniform | 30 deg (+-15) | 1808 | 10 Hz | 0.4 to 100 m | 0.75 m |
+| `os1_16` | 16, uniform | 33.2 deg | 1024 | 10 Hz | 0.5 to 120 m | 0.75 m |
+| `os1_64` | 64, uniform | 42.4 deg | 1024 | 10 Hz | 0.5 to 120 m | 0.75 m |
+| `os1_64_car` | 64, uniform | 42.4 deg | 1024 | 10 Hz | 0.5 to 120 m | 1.80 m |
+| `os0_128` | 128, uniform | 90 deg | 1024 | 10 Hz | 0.3 to 50 m | 0.75 m |
+| `hdl64` | 64 | -24.8 to +2.0 deg | 2048 | 10 Hz | 0.9 to 120 m | 1.73 m |
+| `xt32` | 32 | -16 to +15 deg | 2000 | 10 Hz | 0.5 to 120 m | 0.75 m |
+| `qt64` | 64 | 104.2 deg | 600 | 10 Hz | 0.1 to 60 m | 0.75 m |
+
+- **Range noise**: Gaussian, 0.02 m std in the `noisy` variants, none in the
+  `clean` ones.
+- **Realistic error model** (`real` variants, applied by `mvsim-dataset-gen`
+  per ray): (1) no return beyond a maximum incidence angle; (2) Gaussian range
+  noise with std `sqrt(s0^2 + (k r)^2)`, growing with the range `r`; (3) the
+  beam footprint (`r` x divergence) on an oblique surface spreads the return
+  uniformly over `r * divergence * tan(incidence)`; (4) at depth edges (a
+  neighbor ray hits off the local tangent plane by more than
+  max(5 cm, 2% of `r`)), a mixed return at a range drawn between both
+  surfaces, with some probability; (5) per-ring calibration errors drawn once
+  per sequence: elevation and azimuth offsets (the ray samples the scene
+  along the perturbed direction, but the point is reported along the nominal
+  one) and a range bias. The parameters are drawn uniformly per sequence and
+  rig from these ranges (`REAL_ERROR_RANGES` in `tools/generate.py`), and
+  stored next to each rawlog as `<variant>.errors.json`:
+
+  | parameter | range |
+  |---|---|
+  | range noise std, constant `s0` | 0.005 to 0.02 m |
+  | range noise std, per meter `k` | 0 to 3e-4 |
+  | full beam divergence | 0.05 to 0.3 deg |
+  | maximum incidence angle | 78 to 88 deg |
+  | mixed-return probability at depth edges | 0.1 to 0.5 |
+  | per-ring elevation offset std | 0 to 0.04 deg |
+  | per-ring azimuth offset std | 0 to 0.04 deg |
+  | per-ring range bias std | 0 to 0.01 m |
 
 - **Global shutter**: the whole sweep is cast from the pose at the sweep start;
   every point has `t = 0`.
@@ -248,7 +309,13 @@ Per sequence, under `<world>/<trajectory>/`:
 | `<variant>.gt.tum` | `base_link` ground truth at the sweep start times (10 Hz) |
 | `<variant>.lidar1.gt.tum` | `lidar1` ground truth at the sweep start times |
 | `<variant>.gen.log` | generator command line and log |
+| `<variant>.errors.json` | `real` variants only: the drawn parameters of the realistic LiDAR error model |
 | `gt_200hz.tum` | `base_link` ground truth at 200 Hz (same for every variant) |
+
+Reference maps: `tools/map_export` builds the exact point-cloud map of what
+the sensor saw (a `clean` variant placed with `gt_200hz.tum`), or the map
+implied by an estimated trajectory, for map-quality metrics (see its
+[README](tools/map_export/README.md)).
 
 Note that some odometry systems stamp a scan at its mid-sweep time (MOLA does
 for rolling-shutter data, +0.05 s): compare against the ground truth at the
@@ -271,8 +338,9 @@ sequence against the trajectory.
 export MVSIM_LIO_MVSIM_INSTALL=/path/to/mvsim/install   # if not in ~/ros2_ws/install
 source tools/env.sh
 tools/build_worlds.py              # worlds/*/world.xml, trajectories, plots
-tools/generate.py --jobs 5 --cores-per-job 8   # all sequences and variants
+tools/generate.py --jobs 5 --cores-per-job 8   # all sequences and the seven variants
 tools/screenshot.py                # worlds/*/screenshot*.png
+tools/make_banner.py --maps <dir>  # docs/banner.{gif,mp4} (maps from tools/map_export)
 tools/validate_mola.py --variant os1_32-noisy-rolling   # optional sanity check
 tools/make_docs.py --manifest      # README tables, MANIFEST.tsv, SHA256SUMS
 ```
@@ -283,7 +351,7 @@ MVSim build.
 
 ### Data provenance
 
-Two MVSim builds produced the published files:
+Three MVSim builds produced the published files:
 
 - The 2026-11-04 release (the first 13 worlds) was rendered with a local
   build of the three fixes before their upstream review.
@@ -294,6 +362,9 @@ Two MVSim builds produced the published files:
   `stairwell/handheld_stairs` (all five variants) and
   `stairwell/legged_floors` (the four `os1_32` variants).
   `stairwell/legged_floors/vlp16-noisy-rolling` is still the 2026-11-04 file.
+- The `os1_32-real-global` and `os1_32-real-rolling` variants of all 30
+  sequences were rendered on 2026-11-11 with upstream MVSim `develop` at
+  commit 5c7e3a86, which includes the realistic error model.
 
 The review of the timestamp fix made the trajectory interpolation use times
 relative to the first knot. Upstream renders of the first-release sequences
@@ -443,8 +514,10 @@ TODO: the datasets will be published later; the location is not decided yet.
   horizontal planes and heightfields. 3D mesh models (`<visual>` models) are
   not ray-traced, so trees are made of trunks, branches and clusters of small
   spheres, and cars of boxes and wheels.
-- No glass: windows and doors are open gaps. No intensity, multi-echo,
-  reflections, beam divergence or dropouts other than the maximum range.
+- No glass: windows and doors are open gaps. No intensity, multi-echo or
+  reflections. Beam divergence, grazing-angle dropouts, mixed returns and
+  per-beam calibration errors exist only in the `real` variants, and are
+  geometric models (there is no material model).
 - The scenes are static (no dynamic objects).
 - The IMU has white noise and bias random walk, but no initial bias, scale
   factor or axis misalignment errors. All sensors share one clock (no time
