@@ -25,4 +25,4 @@ build/map_export/bench-map-export --rawlog <data>/forest/crossing/os1_32-clean-g
 
 Options: `--voxel` [m] (0.1), `--every N` (use every N-th sweep, 1),
 `--label` (lidar1), `--offset` [s] added to the sweep stamps, `--align`,
-`--no-deskew`, `--t-end` (stop after this sweep stamp).
+`--no-deskew`, `--t-start` / `--t-end` (sweep stamps to use).

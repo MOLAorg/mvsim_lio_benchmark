@@ -10,14 +10,18 @@
  * occupied voxel: the centroid of its points and the time it was first seen.
  *
  * Usage:
+ *   bench-map-export --rawlog f.rawlog --count-only
+ *       Prints the number of LiDAR sweeps, points, IMU and odometry samples.
  *   bench-map-export --rawlog f.rawlog --traj base_link.tum --out map.bin
  *       [--voxel 0.1] [--every 1] [--label lidar1] [--offset 0]
- *       [--align "r11 r12 r13 tx r21 ... tz"] [--no-deskew] [--t-end T]
+ *       [--align "r11 r12 r13 tx r21 ... tz"] [--no-deskew] [--t-start T] [--t-end T]
  */
 
 #include <mrpt/io/CFileGZInputStream.h>
 #include <mrpt/maps/CPointsMap.h>
 #include <mrpt/math/CQuaternion.h>
+#include <mrpt/obs/CObservationIMU.h>
+#include <mrpt/obs/CObservationOdometry.h>
 #include <mrpt/obs/CObservationPointCloud.h>
 #include <mrpt/obs/CRawlog.h>
 #include <mrpt/poses/CPose3D.h>
@@ -155,12 +159,42 @@ int main(int argc, char** argv)
 {
   try {
     const std::string rawlogFile = argValue(argc, argv, "--rawlog", "");
+    if (!rawlogFile.empty() && hasFlag(argc, argv, "--count-only")) {
+      const std::string lbl = argValue(argc, argv, "--label", "lidar1");
+      mrpt::io::CFileGZInputStream f(rawlogFile);
+      auto a = mrpt::serialization::archiveFrom(f);
+      size_t sweeps = 0;
+      size_t points = 0;
+      size_t imu = 0;
+      size_t odom = 0;
+      size_t idx = 0;
+      for (;;) {
+        mrpt::obs::CActionCollection::Ptr acts;
+        mrpt::obs::CSensoryFrame::Ptr sf;
+        mrpt::obs::CObservation::Ptr obs;
+        if (!mrpt::obs::CRawlog::getActionObservationPairOrObservation(a, acts, sf, obs, idx)) {
+          break;
+        }
+        if (auto pc = std::dynamic_pointer_cast<mrpt::obs::CObservationPointCloud>(obs);
+            pc && pc->sensorLabel == lbl && pc->pointcloud) {
+          sweeps++;
+          points += pc->pointcloud->size();
+        } else if (std::dynamic_pointer_cast<mrpt::obs::CObservationIMU>(obs)) {
+          imu++;
+        } else if (std::dynamic_pointer_cast<mrpt::obs::CObservationOdometry>(obs)) {
+          odom++;
+        }
+      }
+      std::cout << "{\"sweeps\": " << sweeps << ", \"points\": " << points
+                << ", \"imu\": " << imu << ", \"odom\": " << odom << "}\n";
+      return 0;
+    }
     const std::string trajFile = argValue(argc, argv, "--traj", "");
     const std::string outFile = argValue(argc, argv, "--out", "");
     if (rawlogFile.empty() || trajFile.empty() || outFile.empty()) {
       std::cerr << "Usage: bench-map-export --rawlog R --traj T.tum --out M.bin [--voxel 0.1]"
                    " [--every 1] [--label lidar1] [--offset 0] [--align \"12 numbers\"]"
-                   " [--no-deskew] [--t-end T]\n";
+                   " [--no-deskew] [--t-start T] [--t-end T]\n";
       return 1;
     }
     const double voxel = std::stod(argValue(argc, argv, "--voxel", "0.1"));
@@ -168,6 +202,7 @@ int main(int argc, char** argv)
     const std::string label = argValue(argc, argv, "--label", "lidar1");
     const double offset = std::stod(argValue(argc, argv, "--offset", "0"));
     const double tEnd = std::stod(argValue(argc, argv, "--t-end", "1e300"));
+    const double tStart = std::stod(argValue(argc, argv, "--t-start", "-1e300"));
     const bool deskew = !hasFlag(argc, argv, "--no-deskew");
 
     // Optional rigid alignment, left-composed with every trajectory pose:
@@ -212,6 +247,9 @@ int main(int argc, char** argv)
       const double t0 = mrpt::Clock::toDouble(pc->timestamp) + offset;
       if (t0 > tEnd) {
         break;
+      }
+      if (t0 < tStart) {
+        continue;
       }
       const auto& xs = pc->pointcloud->getPointsBufferRef_x();
       const auto& ys = pc->pointcloud->getPointsBufferRef_y();
