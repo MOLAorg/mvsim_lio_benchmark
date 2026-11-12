@@ -350,6 +350,48 @@ for rolling-shutter data, +0.05 s): compare against the ground truth at the
 estimate's own timestamps (e.g. interpolating `gt_200hz.tum`), not by
 nearest-stamp association with the 10 Hz files.
 
+## Using the data from ROS 2
+
+`rawlog2rosbag` (in [mrpt_ros_bridge](https://github.com/MRPT/mrpt_ros_bridge))
+converts a sequence into a ROS 2 bag. It is not in the ROS binary releases
+yet, so build it from source in a colcon workspace:
+
+```bash
+cd ~/ros2_ws/src && git clone -b ros2 https://github.com/MRPT/mrpt_ros_bridge.git
+cd ~/ros2_ws && colcon build --packages-up-to rawlog2rosbag && source install/setup.bash
+```
+
+Then, for one sequence (the ground truth is optional):
+
+```bash
+S=office/spins
+rawlog2rosbag -i $S/os1_32-noisy-rolling.rawlog -o office_spins_os1_32-noisy-rolling \
+  --gt-tum $S/gt_200hz.tum
+```
+
+| topic | type | contents |
+|---|---|---|
+| `/lidar1/points` | `sensor_msgs/PointCloud2` | one sweep per message (10 Hz), in the `lidar1` frame: `x y z t` (float32), `ring` (uint16), plus `label instance` (uint16) in sequences rendered with labels. `t` is in seconds from the header stamp, the sweep start |
+| `/imu1/imu` | `sensor_msgs/Imu` | 200 Hz angular velocity and specific force, in the `imu1` frame (no orientation) |
+| `/odom/odom` | `nav_msgs/Odometry` | wheel odometry, `odom` to `base_link` (10 Hz) |
+| `/tf` | `tf2_msgs/TFMessage` | `odom` to `base_link`, from the wheel odometry |
+| `/tf_static` | `tf2_msgs/TFMessage` | `base_link` to `lidar1` and `imu1` (see [Frames and extrinsics](#frames-and-extrinsics)) |
+| `/ground_truth` | `nav_msgs/Odometry` | with `--gt-tum`: `base_link` in the `map` frame |
+
+- Stamps start at 100 s (see [Conventions](#conventions)): play the bag with
+  `ros2 bag play --clock` and run the nodes with `use_sim_time:=true`.
+- To leave the wheel odometry and its `/tf` out of the bag (e.g. for a LiDAR-inertial method
+  that publishes `odom` itself), pass `-c no_odom.yaml` with:
+  ```yaml
+  sensors:
+    odom:
+      skip: true
+  ```
+- Size and speed, for `office/spins` (a 520 MiB rawlog, 159 s): 30 s and 818 MiB
+  with the default MCAP `zstd_fast` preset; `--storage-preset zstd_small` writes
+  518 MiB but takes 13 min; `--storage-id sqlite3` 1.1 GiB.
+- Add `--no-latched-qos` for bags to be read by ROS 2 Humble.
+
 ## How to regenerate
 
 Requirements: Python 3 with numpy, scipy, matplotlib and Pillow, and a build
