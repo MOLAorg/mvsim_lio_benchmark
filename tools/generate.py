@@ -36,10 +36,11 @@ from mvsim_lio import densify  # noqa: E402
 from mvsim_lio.labels import OUTLIER  # noqa: E402
 
 # Default variant set: all six (noise x shutter) combinations for the main
-# rig, and the noisy rolling-shutter one for the second rig.
+# rig, the noisy rolling-shutter one for the second rig, and the 64-ring
+# density arm at the noisy and real levels (rolling shutter).
 VARIANTS = ['os1_32-clean-global', 'os1_32-clean-rolling', 'os1_32-noisy-global',
             'os1_32-noisy-rolling', 'os1_32-real-global', 'os1_32-real-rolling',
-            'vlp16-noisy-rolling']
+            'vlp16-noisy-rolling', 'os1_64-noisy-rolling', 'os1_64-real-rolling']
 
 
 def seed_for(world, traj):
@@ -62,8 +63,14 @@ REAL_ERROR_RANGES = {
 }
 
 
+# Rigs that share the error model draws of another rig: the density
+# comparison arm (OS1-64 vs OS1-32) differs only in the ring count.
+ERROR_MODEL_RIG = {'os1_64': 'os1_32'}
+
+
 def real_error_env(world, traj, rig):
     """Error model parameters of a "real" sequence, reproducible from its name."""
+    rig = ERROR_MODEL_RIG.get(rig, rig)
     r = random.Random(zlib.crc32(f'{world}/{traj}/{rig}'.encode()))
     env = {k: f'{r.uniform(lo, hi):.6g}' for k, (lo, hi) in REAL_ERROR_RANGES.items()}
     env['MVSIM_LIDAR_CALIB_SEED'] = str((seed_for(world, traj) ^ zlib.crc32(rig.encode())) & 0x7fffffff)

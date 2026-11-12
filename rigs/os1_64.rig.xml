@@ -1,5 +1,6 @@
 <!--
-  mvsim_lio_benchmark sensor rig "os1_64": Ouster OS1-64 style: 64 rings over 42.4 deg, 1024 columns, 10 Hz, 0.5-120 m, plus a 200 Hz IMU.
+  mvsim_lio_benchmark sensor rig "os1_64": Ouster OS1-64 style: 64 rings over 45 deg, 1024 columns, 10 Hz, 0.5-60 m, plus a 200 Hz IMU.
+  Same as "os1_32" except for the ring count, for the LiDAR density comparison.
   Pinned sensor parameters: this file does
   not include MVSim's definitions/*.xml, so upstream changes there do not
   alter the benchmark.
@@ -24,14 +25,14 @@
 <vehicle name="r1" class="lio_rig">
 	<init_pose>0 0 0</init_pose>
 	<sensor class="lidar3d" name="lidar1">
-		<!-- Ouster OS1-64 style: 64 rings over 42.4 deg, 1024 columns, 10 Hz, 0.5-120 m -->
+		<!-- Ouster OS1-64 style: 64 rings over 45 deg, 1024 columns, 10 Hz, 0.5-60 m -->
 		<pose_3d>0.0 0.0 0.75 0.0 0.0 0.0</pose_3d>
 		<vert_nrays>64</vert_nrays>
-		<vert_fov_degrees>42.4</vert_fov_degrees>
+		<vert_fov_degrees>45.0</vert_fov_degrees>
 		<horz_nrays>1024</horz_nrays>
 		<sensor_period>0.1</sensor_period>
 		<min_range>0.5</min_range>
-		<max_range>120.0</max_range>
+		<max_range>60.0</max_range>
 		<!-- Range noise std [m]; zeroed by the "clean" variants. -->
 		<range_std_noise>${MVSIM_LIDAR_RANGE_STD|0.02}</range_std_noise>
 		<!-- Realistic error model (mvsim-dataset-gen only), set by the "real"
