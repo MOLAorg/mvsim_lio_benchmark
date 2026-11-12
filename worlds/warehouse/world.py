@@ -25,7 +25,8 @@ SCREENSHOTS = [
 def make_world():
     rng = np.random.default_rng(SEED)
     w = World('warehouse', __doc__, extent=(-55, 55, -40, 40))
-    w.hplane(-60, 60, -45, 45, 0.0, color='#9a9a94')
+    with w.semantic('floor'):
+        w.hplane(-60, 60, -45, 45, 0.0, color='#9a9a94')
     # Hall shell. The ceiling is left out of the screenshots' way by drawing
     # it last; it is a plane at z = H.
     docks = [dict(kind='door', pos=(x - X0) / (X1 - X0), width=3.2, z_min=0.0, z_max=4.0)
@@ -33,15 +34,18 @@ def make_world():
     docks.append(dict(kind='door', pos=(36.0 - X0) / (X1 - X0), width=5.0, z_min=0.0, z_max=5.0))
     win = [dict(kind='window', pos=(x - X0) / (X1 - X0), width=6.0, z_min=7.0, z_max=8.6)
            for x in (-30.0, -15.0, 0.0, 15.0, 30.0)]
-    w.wall(X0, Y0, X1, Y0, 0.0, H, 0.3, docks)
-    w.wall(X0, Y1, X1, Y1, 0.0, H, 0.3, win)
-    w.wall(X0, Y0, X0, Y1, 0.0, H, 0.3)
-    w.wall(X1, Y0, X1, Y1, 0.0, H, 0.3)
-    for x in np.arange(X0 + 6, X1, 6.0):
-        w.box(x, 0, H - 1.0, 0.25, Y1 - Y0, 0.5, 0.0, '#707880', plot=False)  # roof trusses
+    with w.semantic('wall'):
+        w.wall(X0, Y0, X1, Y0, 0.0, H, 0.3, docks)
+        w.wall(X0, Y1, X1, Y1, 0.0, H, 0.3, win)
+        w.wall(X0, Y0, X0, Y1, 0.0, H, 0.3)
+        w.wall(X1, Y0, X1, Y1, 0.0, H, 0.3)
+    with w.semantic('other-structure'):
+        for x in np.arange(X0 + 6, X1, 6.0):
+            w.box(x, 0, H - 1.0, 0.25, Y1 - Y0, 0.5, 0.0, '#707880', plot=False)  # roof trusses
     for x in np.arange(X0 + 15, X1 - 1, 15.0):
         for y in (-21.0, 25.0):
-            w.box(x, y, 0.0, 0.45, 0.45, H, 0.0, '#c0c0b8')  # columns
+            with w.instance(), w.semantic('column'):
+                w.box(x, y, 0.0, 0.45, 0.45, H, 0.0, '#c0c0b8')
     # Racks: six double rows (two back-to-back single rows each)
     for y in ROWS_Y:
         props.rack_row(w, rng, RACK_X0, y, RACK_LEN, 1.1, 5, 1.6, fill=0.7)
@@ -49,15 +53,21 @@ def make_world():
     # Staging area pallets (south, by the docks) and north
     for _ in range(40):
         x, y = rng.uniform(-30, 25), rng.uniform(-28, -23)
-        w.box(x, y, 0.0, 1.2, 1.0, rng.uniform(0.3, 1.6), rng.uniform(-0.1, 0.1), props.C_PALLET)
+        with w.instance(), w.semantic('goods'):
+            w.box(x, y, 0.0, 1.2, 1.0, rng.uniform(0.3, 1.6), rng.uniform(-0.1, 0.1),
+                  props.C_PALLET)
     for _ in range(25):
         x, y = rng.uniform(-35, 25), rng.uniform(26.5, 28.8)
-        w.box(x, y, 0.0, 1.2, 1.0, rng.uniform(0.3, 1.6), 0.0, props.C_PALLET)
+        with w.instance(), w.semantic('goods'):
+            w.box(x, y, 0.0, 1.2, 1.0, rng.uniform(0.3, 1.6), 0.0, props.C_PALLET)
     # Office cabin and a parked forklift
-    w.box(-40.5, -25.5, 0.0, 8.0, 5.0, 3.0, 0.0, '#d0d8e0')
-    w.box(-32.0, -16.0, 0.0, 2.4, 1.2, 2.1, 0.3, '#e0b020')
-    w.box(-30.6, -15.6, 0.0, 1.0, 1.2, 0.2, 0.3, '#303030')
-    w.hplane(X0, X1, Y0, Y1, H, color='#d8d8d0')
+    with w.instance(), w.semantic('other-structure'):
+        w.box(-40.5, -25.5, 0.0, 8.0, 5.0, 3.0, 0.0, '#d0d8e0')
+    with w.instance(), w.semantic('other-vehicle'):
+        w.box(-32.0, -16.0, 0.0, 2.4, 1.2, 2.1, 0.3, '#e0b020')
+        w.box(-30.6, -15.6, 0.0, 1.0, 1.2, 0.2, 0.3, '#303030')
+    with w.semantic('ceiling'):
+        w.hplane(X0, X1, Y0, Y1, H, color='#d8d8d0')
     return w
 
 

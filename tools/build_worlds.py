@@ -120,7 +120,9 @@ def build(name):
         {k: {kk: (round(vv, 3) if isinstance(vv, float) else vv) for kk, vv in v.items()}
          for k, v in stats.items()}, indent=1) + '\n')
     plot_world(world, built, wdir / 'trajectories.png')
+    unlabeled = f', {world.n_unlabeled} UNLABELED' if world.n_unlabeled else ''
     print(f'{name}: {world.n_prims} primitives, {len(world.classes)} block classes, '
+          f'{world.n_instances} instances{unlabeled}, '
           f'world.xml {(wdir / "world.xml").stat().st_size / 1e6:.1f} MB')
 
 

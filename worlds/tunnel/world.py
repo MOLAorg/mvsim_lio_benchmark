@@ -48,7 +48,8 @@ def make_world():
     rng = np.random.default_rng(SEED)
     xe, ye, the = centerline(LENGTH)
     w = World('tunnel', __doc__, extent=(-380, xe + 115, -60, ye + 115))
-    w.hplane(-400, xe + 120, -80, ye + 120, 0.0, color='#505050')
+    with w.semantic('road'):
+        w.hplane(-400, xe + 120, -80, ye + 120, 0.0, color='#505050')
     seg = 5.0
     niches = [150.0 * k for k in range(1, int(LENGTH / 150) + 1) if 150.0 * k < LENGTH - 10]
     for s in np.arange(0.0, LENGTH, seg):
@@ -58,57 +59,70 @@ def make_world():
             in_niche = side < 0 and any(n <= sm <= n + 3.5 for n in niches)
             if not in_niche:
                 wx, wy, _ = at(sm, side * (HW + 0.15))
-                w.box(wx, wy, 0.0, seg + 0.1, 0.3, HWALL + 0.6, th, '#b8b4a8')
+                with w.semantic('wall'):
+                    w.box(wx, wy, 0.0, seg + 0.1, 0.3, HWALL + 0.6, th, '#b8b4a8')
             # Walkway (raised curb) along each wall
             kx, ky, _ = at(sm, side * (HW - 0.5))
-            w.box(kx, ky, 0.0, seg + 0.05, 1.0, 0.25, th, '#9a9890')
+            with w.semantic('sidewalk'):
+                w.box(kx, ky, 0.0, seg + 0.05, 1.0, 0.25, th, '#9a9890')
             # Haunch (stepped arch) and the ceiling
             hx, hy, _ = at(sm, side * (HW - 0.7))
-            w.box(hx, hy, HWALL, seg + 0.1, 1.6, HCEIL - HWALL, th, '#b8b4a8', plot=False)
+            with w.semantic('ceiling'):
+                w.box(hx, hy, HWALL, seg + 0.1, 1.6, HCEIL - HWALL, th, '#b8b4a8', plot=False)
         cx, cy, _ = at(sm, 0.0)
-        w.box(cx, cy, HCEIL, seg + 0.1, 2 * HW + 0.6, 0.4, th, '#a8a49c', plot=False)
+        with w.semantic('ceiling'):
+            w.box(cx, cy, HCEIL, seg + 0.1, 2 * HW + 0.6, 0.4, th, '#a8a49c', plot=False)
     for n in niches:
         # Emergency niche: 3.5 m long, 1.5 m deep recess in the right wall
         bx, by, th = at(n + 1.75, -(HW + 1.5 + 0.15))
-        w.box(bx, by, 0.0, 3.5, 0.3, HWALL, th, '#c8c4b8')
-        for e in (n, n + 3.5):
-            sx, sy, th2 = at(e, -(HW + 0.9))
-            w.box(sx, sy, 0.0, 0.3, 1.5, HWALL, th2, '#c8c4b8')
+        with w.semantic('wall'):
+            w.box(bx, by, 0.0, 3.5, 0.3, HWALL, th, '#c8c4b8')
+            for e in (n, n + 3.5):
+                sx, sy, th2 = at(e, -(HW + 0.9))
+                w.box(sx, sy, 0.0, 0.3, 1.5, HWALL, th2, '#c8c4b8')
         px, py, th = at(n + 1.75, -(HW + 1.2))
-        w.box(px, py, 0.9, 0.5, 0.3, 0.6, th, '#e04020')  # emergency phone cabinet
+        with w.instance(), w.semantic('other-object'):
+            w.box(px, py, 0.9, 0.5, 0.3, 0.6, th, '#e04020')  # emergency phone cabinet
     for s in np.arange(5.0, LENGTH, 10.0):
         for side in (-1, 1):
             lx, ly, th = at(s, side * (HW - 0.1))
-            w.box(lx, ly, 4.8, 0.6, 0.2, 0.15, th, '#f0f0d0')
+            with w.instance(), w.semantic('other-object'):  # light
+                w.box(lx, ly, 4.8, 0.6, 0.2, 0.15, th, '#f0f0d0')
     for s in np.arange(50.0, LENGTH, 100.0):
         sx, sy, th = at(s, HW - 0.08)
-        w.box(sx, sy, 3.2, 2.0, 0.1, 0.8, th, '#20a040')
+        with w.instance(), w.semantic('traffic-sign'):
+            w.box(sx, sy, 3.2, 2.0, 0.1, 0.8, th, '#20a040')
     for s in np.arange(100.0, LENGTH - 50, 200.0):
         for lat in (-2.0, 2.0):
             fx, fy, th = at(s, lat)
-            w.cylinder(fx, fy, 5.7, 0.6, 4.0, yaw=th, pitch=math.pi / 2, color='#707070')
+            with w.instance(), w.semantic('other-object'):  # jet fan
+                w.cylinder(fx, fy, 5.7, 0.6, 4.0, yaw=th, pitch=math.pi / 2, color='#707070')
     # Portals: facade walls around both openings
     for s_end, sign in ((0.0, -1), (LENGTH, 1)):
         x, y, th = centerline(s_end)
         for side in (-1, 1):
             fx, fy, _ = at(s_end + sign * 1.0, side * (HW + 15.3))
-            w.box(fx, fy, 0.0, 2.0, 30.0, 14.0, th, '#8a8678')
+            with w.semantic('other-structure'):
+                w.box(fx, fy, 0.0, 2.0, 30.0, 14.0, th, '#8a8678')
         lx, ly, _ = at(s_end + sign * 1.0, 0.0)
-        w.box(lx, ly, HCEIL + 0.4, 2.0, 2 * HW + 0.6, 14.0 - HCEIL - 0.4, th, '#8a8678')
+        with w.semantic('other-structure'):
+            w.box(lx, ly, HCEIL + 0.4, 2.0, 2 * HW + 0.6, 14.0 - HCEIL - 0.4, th, '#8a8678')
         # Approach road guard rails, poles and trees
         for d in np.arange(4.0, 70.0, 4.0):
             for side in (-1, 1):
                 gx, gy, _ = at(s_end + sign * d, side * 6.5)
-                w.box(gx, gy, 0.5, 4.05, 0.1, 0.3, th, '#a0a0a0')
-                if int(d) % 12 == 0:
-                    w.cylinder(gx, gy, 0.0, 0.08, 0.8, color='#a0a0a0')
+                with w.semantic('fence'):  # guard rail
+                    w.box(gx, gy, 0.5, 4.05, 0.1, 0.3, th, '#a0a0a0')
+                    if int(d) % 12 == 0:
+                        w.cylinder(gx, gy, 0.0, 0.08, 0.8, color='#a0a0a0')
         for _ in range(12):
             d = rng.uniform(10, 70)
             tx, ty, _ = at(s_end + sign * d, rng.choice([-1, 1]) * rng.uniform(10, 25))
             props.tree(w, rng, tx, ty, 0.0)
     # Turnaround (roundabout) beyond the east portal
     rx, ry, _ = at(LENGTH + 85.0, 0.0)
-    w.cylinder(rx, ry, 0.0, 7.0, 0.3, color='#7a9a60')
+    with w.semantic('other-ground'):  # roundabout island
+        w.cylinder(rx, ry, 0.0, 7.0, 0.3, color='#7a9a60')
     props.tree(w, rng, rx, ry, 0.3, height=8.0, crown=3.0)
     return w
 

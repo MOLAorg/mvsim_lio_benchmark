@@ -327,13 +327,57 @@ treads are rectangular boxes around a central column.
   `base_link`); the generator interpolates them with a C2 spline
   (`tools/mvsim_lio/densify.py`).
 
+### Semantic labels
+
+Every primitive of the worlds has a semantic class, and every discrete object
+(a car, a tree with its trunk and foliage, a desk...) an instance id
+(`tools/mvsim_lio/labels.py`; the world builder's `semantic()` and
+`instance()` contexts). Rendered with `tools/generate.py --labels` (MVSim with
+MRPT/mvsim#182), each point gets two `uint16` fields: `label`, the class of
+the surface its ray hit, and `instance` (0 for extended surfaces such as
+roads, terrain, floors and walls). Mixed returns, a range between two
+surfaces, are labeled `outlier`. Labels never change the points: a labeled
+render is identical to the unlabeled one with the same MVSim build.
+Outdoor classes reuse the SemanticKITTI raw label ids; indoor ones start at
+100.
+
+| id | class |
+|---|---|
+| 0 | unlabeled |
+| 1 | outlier |
+| 10 | car |
+| 20 | other-vehicle |
+| 40 | road |
+| 44 | parking |
+| 48 | sidewalk |
+| 49 | other-ground |
+| 50 | building |
+| 51 | fence |
+| 52 | other-structure |
+| 70 | vegetation |
+| 71 | trunk |
+| 72 | terrain |
+| 80 | pole |
+| 81 | traffic-sign |
+| 99 | other-object |
+| 100 | floor |
+| 101 | ceiling |
+| 102 | wall |
+| 103 | column |
+| 104 | stairs |
+| 105 | table |
+| 106 | chair |
+| 107 | shelf |
+| 108 | other-furniture |
+| 109 | goods |
+
 ## Files
 
 Per sequence, under `<world>/<trajectory>/`:
 
 | file | contents |
 |---|---|
-| `<variant>.rawlog` | MRPT rawlog (gzip): `CObservationPointCloud` (`lidar1`, a `CGenericPointsMap` with fields `x y z t ring`; `sensorPose` = `lidar1` in `base_link`), `CObservationIMU` (`imu1`), `CObservationOdometry` (`odom`), in time order |
+| `<variant>.rawlog` | MRPT rawlog (gzip): `CObservationPointCloud` (`lidar1`, a `CGenericPointsMap` with fields `x y z t ring`, plus `label instance` if rendered with labels; `sensorPose` = `lidar1` in `base_link`), `CObservationIMU` (`imu1`), `CObservationOdometry` (`odom`), in time order |
 | `<variant>.gt.tum` | `base_link` ground truth at the sweep start times (10 Hz) |
 | `<variant>.lidar1.gt.tum` | `lidar1` ground truth at the sweep start times |
 | `<variant>.gen.log` | generator command line and log |

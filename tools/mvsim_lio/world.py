@@ -6,11 +6,18 @@ openings, and one elevation map.
 Every block class has <skip_elevation_adjust/> and <static>true</static>, so its
 z is exactly the one given here (MVSim otherwise moves blocks onto the
 terrain under them) and loading thousands of them stays cheap.
+
+Semantic labels: primitives added inside `with w.semantic('car'):` get that
+class of labels.CLASSES, and those added inside `with w.instance():` share a
+new instance id (e.g. the trunk and foliage of one tree).
 """
 import math
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 
 import numpy as np
+
+from . import labels
 
 
 def _n(v, nd=3):
@@ -49,6 +56,42 @@ class World:
     element_zmin: list = field(default_factory=list)
     terrain: object = None
     n_prims: int = 0
+    label: int = 0  # semantic class of the primitives being added
+    inst: int = 0  # instance id of the primitives being added
+    n_instances: int = 0
+    n_unlabeled: int = 0  # primitives added outside any semantic() context
+
+    # ------------------------------------------------------------------
+    @contextmanager
+    def semantic(self, name):
+        """Primitives added inside get the semantic class `name`."""
+        prev = self.label
+        self.label = labels.CLASSES[name]
+        try:
+            yield
+        finally:
+            self.label = prev
+
+    @contextmanager
+    def instance(self):
+        """Primitives added inside share a new instance id."""
+        prev = self.inst
+        self.n_instances += 1
+        self.inst = self.n_instances
+        try:
+            yield
+        finally:
+            self.inst = prev
+
+    def _tags(self):
+        """Semantic label tags of the primitive being added (none if unlabeled)."""
+        if self.label == 0:
+            self.n_unlabeled += 1
+            return ''
+        s = f'<semantic_class>{self.label}</semantic_class>'
+        if self.inst:
+            s += f'<instance_id>{self.inst}</instance_id>'
+        return s
 
     # ------------------------------------------------------------------
     def _class(self, geom_xml, color):
@@ -64,7 +107,7 @@ class World:
         self.blocks.append(
             f'<block class="{cls}"><init_pose3d>{_n(x)} {_n(y)} {_n(z)} '
             f'{_n(math.degrees(yaw), 2)} {_n(math.degrees(pitch), 2)} {_n(math.degrees(roll), 2)}'
-            f'</init_pose3d></block>\n')
+            f'</init_pose3d>{self._tags()}</block>\n')
         self.n_prims += 1
 
     # ------------------------------------------------------------------
@@ -137,7 +180,7 @@ class World:
         self.elements.append(
             f'\t<element class="horizontal_plane"><x_min>{xmin:.4f}</x_min><x_max>{xmax:.4f}'
             f'</x_max><y_min>{ymin:.4f}</y_min><y_max>{ymax:.4f}</y_max><z>{z:.4f}</z>'
-            f'<color>{color}</color><cull_face>NONE</cull_face></element>\n')
+            f'<color>{color}</color><cull_face>NONE</cull_face>{self._tags()}</element>\n')
         self.element_zmin.append(z)
         self.n_prims += 1
         if plot:
@@ -155,7 +198,7 @@ class World:
             f'\t<element class="vertical_plane"><x0>{x0:.4f}</x0><y0>{y0:.4f}</y0>'
             f'<x1>{x1:.4f}</x1><y1>{y1:.4f}</y1><z>{z0:.4f}</z><height>{height:.4f}</height>'
             f'<thickness>{thickness:.4f}</thickness><color>{color}</color>'
-            f'<cull_face>NONE</cull_face>{ops}</element>\n')
+            f'<cull_face>NONE</cull_face>{ops}{self._tags()}</element>\n')
         self.element_zmin.append(z0)
         self.n_prims += 1 + 2 * len(openings)
         length = math.hypot(x1 - x0, y1 - y0)
@@ -185,7 +228,10 @@ class World:
                     z0 + zl, z0 + zh, color))
 
     def set_terrain(self, terrain):
+        """The world's elevation map: natural ground unless a semantic()
+        context says otherwise."""
         self.terrain = terrain
+        terrain.tags = f'<semantic_class>{self.label or labels.CLASSES["terrain"]}</semantic_class>'
         self.n_prims += 1
 
     # ------------------------------------------------------------------
@@ -235,6 +281,7 @@ class Terrain:
         ys = ymin + resolution * np.arange(self.ny)
         X, Y = np.meshgrid(xs, ys, indexing='ij')
         self.Z = np.asarray(f(X, Y), dtype=float)
+        self.tags = ''  # semantic label tags, set by World.set_terrain()
 
     def height(self, x, y):
         return self.f(np.asarray(x, dtype=float), np.asarray(y, dtype=float))
@@ -244,6 +291,6 @@ class Terrain:
         return (f'\t<element class="elevation_map">\n\t\t<resolution>{self.res}</resolution>\n'
                 f'\t\t<corner_min_x>{self.xmin}</corner_min_x>\n'
                 f'\t\t<corner_min_y>{self.ymin}</corner_min_y>\n'
-                f'\t\t<mesh_color>{self.color}</mesh_color>\n'
+                f'\t\t<mesh_color>{self.color}</mesh_color>{self.tags}\n'
                 f'\t\t<elevation_data_matrix>[\n{rows}\n]</elevation_data_matrix>\n'
                 f'\t</element>\n')

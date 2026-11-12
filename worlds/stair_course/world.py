@@ -31,7 +31,8 @@ SCREENSHOTS = [
 def make_world():
     rng = np.random.default_rng(SEED)
     w = World('stair_course', __doc__, extent=(-32, 32, -27, 27))
-    w.hplane(-35, 35, -30, 30, 0.0, color='#9a948a')
+    with w.semantic('other-ground'):
+        w.hplane(-35, 35, -30, 30, 0.0, color='#9a948a')
     # Courtyard facades
     for (x, y, lx, ly, h) in ((0, 23, 60, 6, 15), (0, -23, 60, 6, 12), (-28, 0, 6, 40, 18),
                               (28, 0, 6, 40, 10)):
@@ -43,42 +44,51 @@ def make_world():
     for k in range(4):
         props.bench(w, -14.0 + 6.0 * k, -16.0, 0.0, 0.0)
     # Terrace (solid) with parapets, and the straight flight up to it
-    w.box((TX0 + TX1) / 2, (TY0 + TY1) / 2, 0.0, TX1 - TX0, TY1 - TY0, ZT, 0.0, '#b8b0a4',
-          drivable=True)
+    with w.semantic('other-structure'):
+        w.box((TX0 + TX1) / 2, (TY0 + TY1) / 2, 0.0, TX1 - TX0, TY1 - TY0, ZT, 0.0, '#b8b0a4',
+              drivable=True)
     props.stairs_flight(w, 0.0, TY0 - 14 * 0.30, 0.0, math.pi / 2, 14, 0.17, 0.30, 2.0)
     for side in (-1.0, 1.0):
         for k in range(15):
             yy = TY0 - 14 * 0.30 + 0.3 * k
             zs = min(14, k) * 0.17
-            w.cylinder(side * 1.1, yy, zs, 0.03, 1.0, color=props.C_METAL)  # handrail posts
+            with w.semantic('fence'):
+                w.cylinder(side * 1.1, yy, zs, 0.03, 1.0, color=props.C_METAL)  # handrail posts
     par = '#a8a094'
-    w.box_between(TX0, TY0, -1.2, TY0, ZT, 0.2, 1.0, par)
-    w.box_between(1.2, TY0, TX1, TY0, ZT, 0.2, 1.0, par)
-    w.box_between(TX0, TY1, TX1, TY1, ZT, 0.2, 1.0, par)
-    w.box_between(TX0, TY0, TX0, TY1, ZT, 0.2, 1.0, par)
-    w.box_between(TX1, TY0, TX1, TY1, ZT, 0.2, 1.0, par)
+    with w.semantic('fence'):  # parapets
+        w.box_between(TX0, TY0, -1.2, TY0, ZT, 0.2, 1.0, par)
+        w.box_between(1.2, TY0, TX1, TY0, ZT, 0.2, 1.0, par)
+        w.box_between(TX0, TY1, TX1, TY1, ZT, 0.2, 1.0, par)
+        w.box_between(TX0, TY0, TX0, TY1, ZT, 0.2, 1.0, par)
+        w.box_between(TX1, TY0, TX1, TY1, ZT, 0.2, 1.0, par)
     for (x, y) in ((-5.0, 11.0), (-5.0, 3.0), (7.0, 11.0), (2.0, 3.0)):
-        w.box(x, y, ZT, 1.0, 1.0, 0.8, 0.0, '#806850')  # planters
+        with w.instance(), w.semantic('other-object'):
+            w.box(x, y, ZT, 1.0, 1.0, 0.8, 0.0, '#806850')  # planters
     # Spiral stair: column, floating treads, railing posts
     cx, cy = SC
-    w.cylinder(cx, cy, ZT, 0.25, ZP + 1.2 - ZT, color='#909090')
-    for i in range(N_SP):
-        a = A0 + math.radians(18.0 * (i + 0.5))
-        rc = 0.25 + 1.25 / 2
-        top = ZT + (i + 1) * R_SP
-        w.box(cx + rc * math.cos(a), cy + rc * math.sin(a), top - 0.08, 1.25, 0.45, 0.08, a,
-              props.C_CONCRETE, drivable=True)
-        w.cylinder(cx + 1.55 * math.cos(a), cy + 1.55 * math.sin(a), top, 0.025, 1.0,
-                   color=props.C_METAL)
+    with w.instance(), w.semantic('stairs'):
+        w.cylinder(cx, cy, ZT, 0.25, ZP + 1.2 - ZT, color='#909090')
+        for i in range(N_SP):
+            a = A0 + math.radians(18.0 * (i + 0.5))
+            rc = 0.25 + 1.25 / 2
+            top = ZT + (i + 1) * R_SP
+            w.box(cx + rc * math.cos(a), cy + rc * math.sin(a), top - 0.08, 1.25, 0.45, 0.08, a,
+                  props.C_CONCRETE, drivable=True)
+            with w.semantic('fence'):
+                w.cylinder(cx + 1.55 * math.cos(a), cy + 1.55 * math.sin(a), top, 0.025, 1.0,
+                           color=props.C_METAL)
     # Upper platform on two columns, with parapets, entered from the spiral
     px0, px1, py0, py1 = cx - 0.5, TX1, cy - 2.7, cy - 0.6
-    w.box((px0 + px1) / 2, (py0 + py1) / 2, ZP - 0.2, px1 - px0, py1 - py0, 0.2, 0.0,
-          '#b0aca4', drivable=True, plot=False)
+    with w.semantic('other-structure'):
+        w.box((px0 + px1) / 2, (py0 + py1) / 2, ZP - 0.2, px1 - px0, py1 - py0, 0.2, 0.0,
+              '#b0aca4', drivable=True, plot=False)
     for (x, y) in ((px1 - 0.3, py0 + 0.3), (px1 - 0.3, py1 - 0.3)):
-        w.box(x, y, ZT, 0.3, 0.3, ZP - 0.2 - ZT, 0.0, '#b0aca4')
-    w.box_between(px0, py0, px1, py0, ZP, 0.1, 1.0, par)
-    w.box_between(px1, py0, px1, py1, ZP, 0.1, 1.0, par)
-    w.box_between(cx + 1.6, py1, px1, py1, ZP, 0.1, 1.0, par)
+        with w.instance(), w.semantic('column'):
+            w.box(x, y, ZT, 0.3, 0.3, ZP - 0.2 - ZT, 0.0, '#b0aca4')
+    with w.semantic('fence'):
+        w.box_between(px0, py0, px1, py0, ZP, 0.1, 1.0, par)
+        w.box_between(px1, py0, px1, py1, ZP, 0.1, 1.0, par)
+        w.box_between(cx + 1.6, py1, px1, py1, ZP, 0.1, 1.0, par)
     return w
 
 

@@ -29,24 +29,26 @@ SCREENSHOTS = [
 ]
 
 
-def slab(w, z, hole):
+def slab(w, z, hole, label='floor'):
     """Slab with top at z, minus an optional hole (x0, x1, y0, y1)."""
-    if hole is None:
-        w.box(0.0, 0.0, z - SLAB, X1 - X0, Y1 - Y0, SLAB, 0.0, '#b8b4ac', drivable=True,
+    with w.semantic(label):
+        if hole is None:
+            w.box(0.0, 0.0, z - SLAB, X1 - X0, Y1 - Y0, SLAB, 0.0, '#b8b4ac', drivable=True,
                   plot=False)
-        return
-    hx0, hx1, hy0, hy1 = hole
-    parts = [(X0, hx0, Y0, Y1), (hx1, X1, Y0, Y1), (hx0, hx1, Y0, hy0), (hx0, hx1, hy1, Y1)]
-    for (a, b, c, d) in parts:
-        if b - a > 1e-6 and d - c > 1e-6:
-            w.box((a + b) / 2, (c + d) / 2, z - SLAB, b - a, d - c, SLAB, 0.0, '#b8b4ac',
-                  drivable=True, plot=False)
+            return
+        hx0, hx1, hy0, hy1 = hole
+        parts = [(X0, hx0, Y0, Y1), (hx1, X1, Y0, Y1), (hx0, hx1, Y0, hy0), (hx0, hx1, hy1, Y1)]
+        for (a, b, c, d) in parts:
+            if b - a > 1e-6 and d - c > 1e-6:
+                w.box((a + b) / 2, (c + d) / 2, z - SLAB, b - a, d - c, SLAB, 0.0, '#b8b4ac',
+                      drivable=True, plot=False)
 
 
 def make_world():
     rng = np.random.default_rng(SEED)
     w = World('stairwell', __doc__, extent=(-25, 25, -16, 16))
-    w.hplane(-30, 30, -20, 20, 0.0, color='#707068')
+    with w.semantic('floor'):
+        w.hplane(-30, 30, -20, 20, 0.0, color='#707068')
     hole = (FL0, SX1, -SY, SY)
     for k, z in enumerate(FLOORS):
         if k > 0:
@@ -55,33 +57,37 @@ def make_world():
         H = zc - z
         win = [dict(kind='window', pos=p, width=1.6, z_min=0.9, z_max=2.4)
                for p in np.linspace(0.08, 0.92, 7)]
-        w.wall(X0, Y0, X1, Y0, z, H, 0.25, win)
-        w.wall(X0, Y1, X1, Y1, z, H, 0.25, win)
-        w.wall(X0, Y0, X0, Y1, z, H, 0.25)
-        w.wall(X1, Y0, X1, Y1, z, H, 0.25)
-        # Corridor walls with three doors per side
-        doors = [dict(kind='door', pos=(x - X0) / (SX0 - X0), width=1.1, z_min=0.0, z_max=2.1)
-                 for x in (-12.0, -4.5, 3.0)]
-        for side in (-1, 1):
-            w.wall(X0, side * CW, SX0, side * CW, z, H, 0.12, doors)
-            for x in (-7.5, 0.0):
-                w.wall(x, side * CW, x, side * (Y1 - 0.15), z, H, 0.1)  # room partitions
-            # Stairwell side walls and the rooms east of the corridor
-            w.wall(SX0, side * SY, X1, side * SY, z, H, 0.15)
-        w.wall(SX0, -Y1, SX0, -SY, z, H, 0.15)
-        w.wall(SX0, SY, SX0, Y1, z, H, 0.15)
-        w.wall(SX0, -SY, SX0, SY, z, H, 0.15,
-               [dict(kind='door', pos=0.5, width=1.6, z_min=0.0, z_max=2.2)])
+        with w.semantic('wall'):
+            w.wall(X0, Y0, X1, Y0, z, H, 0.25, win)
+            w.wall(X0, Y1, X1, Y1, z, H, 0.25, win)
+            w.wall(X0, Y0, X0, Y1, z, H, 0.25)
+            w.wall(X1, Y0, X1, Y1, z, H, 0.25)
+            # Corridor walls with three doors per side
+            doors = [dict(kind='door', pos=(x - X0) / (SX0 - X0), width=1.1, z_min=0.0,
+                          z_max=2.1) for x in (-12.0, -4.5, 3.0)]
+            for side in (-1, 1):
+                w.wall(X0, side * CW, SX0, side * CW, z, H, 0.12, doors)
+                for x in (-7.5, 0.0):
+                    w.wall(x, side * CW, x, side * (Y1 - 0.15), z, H, 0.1)  # room partitions
+                # Stairwell side walls and the rooms east of the corridor
+                w.wall(SX0, side * SY, X1, side * SY, z, H, 0.15)
+            w.wall(SX0, -Y1, SX0, -SY, z, H, 0.15)
+            w.wall(SX0, SY, SX0, Y1, z, H, 0.15)
+            w.wall(SX0, -SY, SX0, SY, z, H, 0.15,
+                   [dict(kind='door', pos=0.5, width=1.6, z_min=0.0, z_max=2.2)])
         # Furniture in the rooms
         for xr in (-11.25, -3.75, 3.75):
             for side in (-1, 1):
                 yr = side * 4.8
-                w.box(xr, yr, 0.72 + z, 1.8, 0.9, 0.04, 0.0, '#c8b898')
-                for dx in (-0.8, 0.8):
-                    for dy in (-0.38, 0.38):
-                        w.box(xr + dx, yr + dy, z, 0.05, 0.05, 0.72, 0.0, '#606060')
-                w.box(xr + 2.6, side * (Y1 - 0.5), z, 1.0, 0.4, 2.0, 0.0, '#e0e0d8')
-                w.cylinder(xr - 1.5, yr - side * 1.2, z, 0.25, 0.48, color='#304060')
+                with w.instance(), w.semantic('table'):
+                    w.box(xr, yr, 0.72 + z, 1.8, 0.9, 0.04, 0.0, '#c8b898')
+                    for dx in (-0.8, 0.8):
+                        for dy in (-0.38, 0.38):
+                            w.box(xr + dx, yr + dy, z, 0.05, 0.05, 0.72, 0.0, '#606060')
+                with w.instance(), w.semantic('shelf'):
+                    w.box(xr + 2.6, side * (Y1 - 0.5), z, 1.0, 0.4, 2.0, 0.0, '#e0e0d8')
+                with w.instance(), w.semantic('chair'):
+                    w.cylinder(xr - 1.5, yr - side * 1.2, z, 0.25, 0.48, color='#304060')
                 if rng.uniform() < 0.5:
                     props.bush(w, rng, xr - 2.8, side * (Y1 - 0.8), z, size=0.5)
         if k + 1 < len(FLOORS):
@@ -91,13 +97,15 @@ def make_world():
             yc1, yc2 = -(FW0 + FW1) / 2, (FW0 + FW1) / 2
             props.stairs_flight(w, FL0, yc1, z, 0.0, NSTEP, RISER, TREAD, FW1 - FW0,
                                 thickness=0.3)
-            w.box((FL1 + SX1) / 2, 0.0, zm - 0.2, SX1 - FL1, 2 * SY, 0.2, 0.0,
-                  props.C_CONCRETE, drivable=True)  # mid landing
+            with w.semantic('stairs'):
+                w.box((FL1 + SX1) / 2, 0.0, zm - 0.2, SX1 - FL1, 2 * SY, 0.2, 0.0,
+                      props.C_CONCRETE, drivable=True)  # mid landing
             props.stairs_flight(w, FL1, yc2, zm, math.pi, NSTEP, RISER, TREAD, FW1 - FW0,
                                 thickness=0.3)
-            w.box((FL0 + FL1) / 2, 0.0, z, FL1 - FL0, 2 * FW0, 2 * NSTEP * RISER - SLAB, 0.0,
-                  '#c8c4bc')  # stair core wall between the flights
-    slab(w, HROOF, None)
+            with w.semantic('wall'):
+                w.box((FL0 + FL1) / 2, 0.0, z, FL1 - FL0, 2 * FW0, 2 * NSTEP * RISER - SLAB,
+                      0.0, '#c8c4bc')  # stair core wall between the flights
+    slab(w, HROOF, None, 'ceiling')
     return w
 
 

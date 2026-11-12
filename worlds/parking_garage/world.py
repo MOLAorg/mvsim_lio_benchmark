@@ -34,43 +34,52 @@ def slab(w, z, holes):
         for h in holes:
             if h[0] <= (a + b) / 2 <= h[1]:
                 ys = [h[3], Y1] if h[2] <= Y0 + 1e-6 else [Y0, h[2]]
-        w.box((a + b) / 2, (ys[0] + ys[1]) / 2, z - SLAB, b - a, ys[1] - ys[0], SLAB, 0.0,
-              '#b0aca4', drivable=True, plot=False)
+        with w.semantic('parking'):
+            w.box((a + b) / 2, (ys[0] + ys[1]) / 2, z - SLAB, b - a, ys[1] - ys[0], SLAB, 0.0,
+                  '#b0aca4', drivable=True, plot=False)
 
 
 def parapets(w, z):
     for (xa, ya, xb, yb) in ((X0, Y0, X1, Y0), (X0, Y1, X1, Y1), (X0, Y0, X0, Y1), (X1, Y0, X1, Y1)):
-        w.box_between(xa, ya, xb, yb, z, 0.2, 1.1, '#c0bcb4')
+        with w.semantic('wall'):
+            w.box_between(xa, ya, xb, yb, z, 0.2, 1.1, '#c0bcb4')
 
 
 def make_world():
     rng = np.random.default_rng(SEED)
     w = World('parking_garage', __doc__, extent=(-60, 60, -45, 45))
-    w.hplane(-70, 70, -55, 55, 0.0, color='#585858')
+    with w.semantic('parking'):
+        w.hplane(-70, 70, -55, 55, 0.0, color='#585858')
     hole_a = (RAMP_X0, RAMP_X1, Y0, -14.0)  # over ramp A (L0 -> L1), south strip
     hole_b = (RAMP_X0, RAMP_X1, 14.0, Y1)  # over ramp B (L1 -> L2), north strip
     slab(w, LEVELS[1], [hole_a])
     slab(w, LEVELS[2], [hole_b])
-    w.ramp(RAMP_X0, -17.0, 0.0, RAMP_X1 - RAMP_X0, 6.0, LEVELS[1], color='#a8a49c', drivable=True)
-    w.ramp(RAMP_X1, 17.0, LEVELS[1], RAMP_X1 - RAMP_X0, 6.0, LEVELS[2] - LEVELS[1], yaw=math.pi,
-           color='#a8a49c', drivable=True)
+    with w.semantic('road'):
+        w.ramp(RAMP_X0, -17.0, 0.0, RAMP_X1 - RAMP_X0, 6.0, LEVELS[1], color='#a8a49c',
+               drivable=True)
+        w.ramp(RAMP_X1, 17.0, LEVELS[1], RAMP_X1 - RAMP_X0, 6.0, LEVELS[2] - LEVELS[1],
+               yaw=math.pi, color='#a8a49c', drivable=True)
     # Ground level walls: entrance on the west side, ventilation openings
     vents = [dict(kind='window', pos=p, width=6.0, z_min=1.2, z_max=2.4) for p in (0.2, 0.5, 0.8)]
-    w.wall(X0, Y0, X1, Y0, 0.0, LEVELS[1] - SLAB, 0.25, vents)
-    w.wall(X0, Y1, X1, Y1, 0.0, LEVELS[1] - SLAB, 0.25, vents)
-    w.wall(X1, Y0, X1, Y1, 0.0, LEVELS[1] - SLAB, 0.25, vents[:1])
-    w.wall(X0, Y0, X0, Y1, 0.0, LEVELS[1] - SLAB, 0.25,
-           [dict(kind='door', pos=(-10.5 - Y0) / (Y1 - Y0), width=7.0, z_min=0.0, z_max=2.9)])
+    with w.semantic('wall'):
+        w.wall(X0, Y0, X1, Y0, 0.0, LEVELS[1] - SLAB, 0.25, vents)
+        w.wall(X0, Y1, X1, Y1, 0.0, LEVELS[1] - SLAB, 0.25, vents)
+        w.wall(X1, Y0, X1, Y1, 0.0, LEVELS[1] - SLAB, 0.25, vents[:1])
+        w.wall(X0, Y0, X0, Y1, 0.0, LEVELS[1] - SLAB, 0.25,
+               [dict(kind='door', pos=(-10.5 - Y0) / (Y1 - Y0), width=7.0, z_min=0.0,
+                     z_max=2.9)])
     for z in LEVELS[1:]:
         parapets(w, z)
     # Barriers along the slab openings
-    w.box_between(RAMP_X0 - 1, -14.0, RAMP_X1, -14.0, LEVELS[1], 0.2, 1.1, '#d0a030')
-    w.box_between(RAMP_X0, 14.0, RAMP_X1 + 1, 14.0, LEVELS[2], 0.2, 1.1, '#d0a030')
+    with w.semantic('fence'):
+        w.box_between(RAMP_X0 - 1, -14.0, RAMP_X1, -14.0, LEVELS[1], 0.2, 1.1, '#d0a030')
+        w.box_between(RAMP_X0, 14.0, RAMP_X1 + 1, 14.0, LEVELS[2], 0.2, 1.1, '#d0a030')
     # Columns between levels
     for k, z in enumerate(LEVELS[:2]):
         for x in np.arange(-24.0, 24.1, 8.0):
             for y in (-7.0, 7.0):
-                w.box(x, y, z, 0.6, 0.6, LEVELS[k + 1] - SLAB - z, 0.0, '#c8c4bc')
+                with w.instance(), w.semantic('column'):
+                    w.box(x, y, z, 0.6, 0.6, LEVELS[k + 1] - SLAB - z, 0.0, '#c8c4bc')
     # Parked cars: central double row and the outer bays
     for k, z in enumerate(LEVELS):
         for x in np.arange(-23.75, 24.0, 2.5):

@@ -3,7 +3,9 @@
 Foliage is modeled as clusters of small spheres rather than one solid ball,
 so that the LiDAR sees a porous, irregular canopy as it does with real trees.
 All randomness comes from the `rng` argument (numpy Generator).
+Each call of a prop is one object (instance) of a semantic class (labels.py).
 """
+import functools
 import math
 
 C_TRUNK = '#6b4f32'
@@ -20,6 +22,18 @@ C_BEAM = '#e07020'
 C_PALLET = '#c8a070'
 
 
+def _object(cls):
+    """Decorator: the primitives of each call are one instance of class `cls`."""
+    def deco(fn):
+        @functools.wraps(fn)
+        def wrapper(w, *args, **kwargs):
+            with w.instance(), w.semantic(cls):
+                return fn(w, *args, **kwargs)
+        return wrapper
+    return deco
+
+
+@_object('vegetation')
 def tree(w, rng, x, y, z, height=None, crown=None, trunk_r=None, leaves=40, branches=4,
          color=C_LEAF):
     """Deciduous tree: trunk, a few tilted branches and a porous crown of
@@ -28,11 +42,13 @@ def tree(w, rng, x, y, z, height=None, crown=None, trunk_r=None, leaves=40, bran
     R = crown if crown is not None else rng.uniform(1.5, 3.0)
     tr = trunk_r if trunk_r is not None else rng.uniform(0.12, 0.30)
     h_trunk = H - 1.6 * R
-    w.cylinder(x, y, z - 0.2, tr, h_trunk + 0.2 + 0.5 * R, color=C_TRUNK)
-    for _ in range(branches):
-        yaw = rng.uniform(-math.pi, math.pi)
-        w.cylinder(x, y, z + h_trunk * rng.uniform(0.7, 1.0), tr * 0.35, R * rng.uniform(0.7, 1.1),
-                   yaw=yaw, pitch=math.radians(rng.uniform(35, 60)), color=C_TRUNK)
+    with w.semantic('trunk'):
+        w.cylinder(x, y, z - 0.2, tr, h_trunk + 0.2 + 0.5 * R, color=C_TRUNK)
+        for _ in range(branches):
+            yaw = rng.uniform(-math.pi, math.pi)
+            w.cylinder(x, y, z + h_trunk * rng.uniform(0.7, 1.0), tr * 0.35,
+                       R * rng.uniform(0.7, 1.1), yaw=yaw,
+                       pitch=math.radians(rng.uniform(35, 60)), color=C_TRUNK)
     cz = z + h_trunk + R * 0.8
     for _ in range(leaves):
         # Uniform in an ellipsoid shell-ish volume (denser outside, as foliage).
@@ -43,11 +59,13 @@ def tree(w, rng, x, y, z, height=None, crown=None, trunk_r=None, leaves=40, bran
                  color=color)
 
 
+@_object('vegetation')
 def conifer(w, rng, x, y, z, height=None, color=C_LEAF2):
     """Conifer: trunk plus stacked, shrinking rings of spheres."""
     H = height if height is not None else rng.uniform(8.0, 16.0)
     tr = rng.uniform(0.15, 0.35)
-    w.cylinder(x, y, z - 0.2, tr, H + 0.2, color=C_TRUNK)
+    with w.semantic('trunk'):
+        w.cylinder(x, y, z - 0.2, tr, H + 0.2, color=C_TRUNK)
     z_start = z + rng.uniform(1.5, 3.0)
     levels = int((H - (z_start - z)) / 0.9)
     for k in range(levels):
@@ -60,6 +78,7 @@ def conifer(w, rng, x, y, z, height=None, color=C_LEAF2):
             w.sphere(x + rk * math.cos(a), y + rk * math.sin(a), zk, 0.35, color=color)
 
 
+@_object('vegetation')
 def bush(w, rng, x, y, z, size=None, color=C_LEAF):
     S = size if size is not None else rng.uniform(0.6, 1.4)
     for _ in range(int(6 + 8 * S)):
@@ -67,6 +86,7 @@ def bush(w, rng, x, y, z, size=None, color=C_LEAF):
                  z + rng.uniform(0.1, S * 0.8), rng.uniform(0.2, 0.4) * S, color=color)
 
 
+@_object('trunk')
 def log(w, rng, x, y, z, length=None, radius=None):
     L = length if length is not None else rng.uniform(3, 7)
     r = radius if radius is not None else rng.uniform(0.15, 0.3)
@@ -74,6 +94,7 @@ def log(w, rng, x, y, z, length=None, radius=None):
                color=C_TRUNK)
 
 
+@_object('car')
 def car(w, rng, x, y, z, yaw, kind=None):
     """Parked car centered at (x, y) on ground height z, heading `yaw`."""
     kinds = {'sedan': (4.5, 1.8, 1.45), 'hatch': (3.9, 1.75, 1.5), 'suv': (4.7, 1.9, 1.75),
@@ -98,6 +119,7 @@ def car(w, rng, x, y, z, yaw, kind=None):
                        pitch=math.pi / 2, color=C_TIRE)
 
 
+@_object('pole')
 def lamp_post(w, x, y, z, yaw, height=6.0, arm=1.5):
     w.cylinder(x, y, z, 0.09, height, color=C_METAL)
     w.cylinder(x, y, z + height - 0.1, 0.05, arm, yaw=yaw, pitch=math.pi / 2, color=C_METAL)
@@ -105,6 +127,7 @@ def lamp_post(w, x, y, z, yaw, height=6.0, arm=1.5):
     w.box(hx, hy, z + height - 0.35, 0.7, 0.3, 0.25, yaw, '#e8e8d0')
 
 
+@_object('other-object')
 def bench(w, x, y, z, yaw):
     c, s = math.cos(yaw), math.sin(yaw)
     w.box(x, y, z + 0.42, 1.8, 0.45, 0.06, yaw, '#8a6a40')
@@ -113,19 +136,24 @@ def bench(w, x, y, z, yaw):
         w.box(x + c * d, y + s * d, z, 0.08, 0.45, 0.42, yaw, C_METAL)
 
 
+@_object('other-object')
 def bin_(w, x, y, z):
     w.cylinder(x, y, z, 0.3, 0.95, color='#305030')
 
 
+@_object('pole')
 def sign_post(w, x, y, z, yaw):
     w.cylinder(x, y, z, 0.04, 2.6, color=C_METAL)
-    w.box(x, y, z + 2.0, 0.05, 0.7, 0.7, yaw, '#e0e0e0')
+    with w.semantic('traffic-sign'):
+        w.box(x, y, z + 2.0, 0.05, 0.7, 0.7, yaw, '#e0e0e0')
 
 
+@_object('pole')
 def bollard(w, x, y, z):
     w.cylinder(x, y, z, 0.1, 0.9, color='#404040')
 
 
+@_object('other-structure')
 def bus_stop(w, x, y, z, yaw):
     c, s = math.cos(yaw), math.sin(yaw)
     w.box(x - s * 0.7, y + c * 0.7, z, 4.0, 0.08, 2.3, yaw, '#a0b0c0')  # back panel
@@ -135,6 +163,7 @@ def bus_stop(w, x, y, z, yaw):
     bench(w, x - s * 0.4, y + c * 0.4, z, yaw)
 
 
+@_object('fence')
 def fence(w, x0, y0, x1, y1, z_fn, spacing=2.5, height=1.2, rails=2):
     L = math.hypot(x1 - x0, y1 - y0)
     n = max(1, int(L / spacing))
@@ -148,6 +177,7 @@ def fence(w, x0, y0, x1, y1, z_fn, spacing=2.5, height=1.2, rails=2):
         w.box_between(x0, y0, x1, y1, zm + zr - 0.05, 0.05, 0.1, '#7a6040')
 
 
+@_object('building')
 def building(w, rng, cx, cy, lx, ly, height, yaw=0.0, z=0.0, pilaster=4.0, color=None,
              entrance_side=None):
     """Block building with facade relief: pilasters every `pilaster` m, a
@@ -188,6 +218,7 @@ def building(w, rng, cx, cy, lx, ly, height, yaw=0.0, z=0.0, pilaster=4.0, color
         w.box(ex, ey, z + 3.0, dims[0], dims[1], 0.2, yaw, '#505860')
 
 
+@_object('shelf')
 def rack_row(w, rng, x0, y0, length, depth, levels, level_h, bay=2.7, axis='x', fill=0.75,
              z=0.0):
     """Pallet rack row starting at (x0, y0) along +x (or +y): uprights,
@@ -215,14 +246,16 @@ def rack_row(w, rng, x0, y0, length, depth, levels, level_h, bay=2.7, axis='x', 
                     continue
                 u = i * bay + 0.15 + k * 1.25 + 0.6
                 hgt = rng.uniform(0.4, level_h - 0.35)
-                if axis == 'x':
-                    w.box(x0 + u, y0 + depth / 2, zl + 0.15, 1.1, depth - 0.1, hgt, 0.0,
-                          C_PALLET)
-                else:
-                    w.box(x0 + depth / 2, y0 + u, zl + 0.15, depth - 0.1, 1.1, hgt, 0.0,
-                          C_PALLET)
+                with w.instance(), w.semantic('goods'):
+                    if axis == 'x':
+                        w.box(x0 + u, y0 + depth / 2, zl + 0.15, 1.1, depth - 0.1, hgt, 0.0,
+                              C_PALLET)
+                    else:
+                        w.box(x0 + depth / 2, y0 + u, zl + 0.15, depth - 0.1, 1.1, hgt, 0.0,
+                              C_PALLET)
 
 
+@_object('stairs')
 def stairs_flight(w, x0, y0, z0, yaw, n_steps, riser, tread, width, color=C_CONCRETE,
                   thickness=None):
     """Stair flight: step i rises (i+1)*riser above z0, starting at (x0, y0)

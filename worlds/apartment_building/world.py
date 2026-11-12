@@ -49,7 +49,8 @@ def wall(w, x0, y0, x1, y1, z, openings_at=(), thick=0.12, kinds=None):
         u = (math.hypot(c[0] - x0, c[1] - y0)) / L
         k = kinds[i] if kinds else 'door'
         ops.append(door(u) if k == 'door' else door(u, 1.2) if k == 'passage' else window(u))
-    w.wall(x0, y0, x1, y1, z, H, thick, ops, color='#e4e0d8')
+    with w.semantic('wall'):
+        w.wall(x0, y0, x1, y1, z, H, thick, ops, color='#e4e0d8')
 
 
 def apartment(w, z, sx):
@@ -64,19 +65,21 @@ def apartment(w, z, sx):
     wall(w, X(6.6), 3.5, X(10.0), 3.5, z)  # bedroom 1 | kitchen
 
 
-def slab(w, z):
+def slab(w, z, label='floor'):
     """Slab with its top at z and a hole over the stair."""
     parts = [(X0, X1, Y0, FLIGHT_Y0), (X0, -CORE + 0.05, FLIGHT_Y0, CORE_N),
              (CORE - 0.05, X1, FLIGHT_Y0, CORE_N), (X0, X1, CORE_N, Y1)]
-    for a, b, c, d in parts:
-        w.box((a + b) / 2, (c + d) / 2, z - SLAB, b - a, d - c, SLAB, 0.0, '#c8c4bc',
-              drivable=True, plot=False)
+    with w.semantic(label):
+        for a, b, c, d in parts:
+            w.box((a + b) / 2, (c + d) / 2, z - SLAB, b - a, d - c, SLAB, 0.0, '#c8c4bc',
+                  drivable=True, plot=False)
 
 
 def make_world():
     rng = np.random.default_rng(SEED)
     w = World('apartment_building', __doc__, extent=(-22, 22, -18, 16))
-    w.hplane(-30, 30, -25, 25, 0.0, color='#7a7a72')
+    with w.semantic('floor'):
+        w.hplane(-30, 30, -25, 25, 0.0, color='#7a7a72')
     for k, z in enumerate(FLOORS):
         if k > 0:
             slab(w, z)
@@ -99,15 +102,17 @@ def make_world():
             zm = z + NSTEP * RISER
             props.stairs_flight(w, FX, FLIGHT_Y0, z, math.pi / 2, NSTEP, RISER, TREAD,
                                 2 * FX - 0.1, thickness=0.3)
-            w.box(0.0, (FLIGHT_Y1 + CORE_N) / 2, zm - 0.2, 2 * CORE - 0.2, CORE_N - FLIGHT_Y1,
-                  0.2, 0.0, props.C_CONCRETE, drivable=True)
+            with w.semantic('stairs'):  # half landing
+                w.box(0.0, (FLIGHT_Y1 + CORE_N) / 2, zm - 0.2, 2 * CORE - 0.2,
+                      CORE_N - FLIGHT_Y1, 0.2, 0.0, props.C_CONCRETE, drivable=True)
             props.stairs_flight(w, -FX, FLIGHT_Y1, zm, -math.pi / 2, NSTEP, RISER, TREAD,
                                 2 * FX - 0.1, thickness=0.3)
-    w.box(0.0, (FLIGHT_Y0 + FLIGHT_Y1) / 2, 0.0, 0.1, FLIGHT_Y1 - FLIGHT_Y0, HROOF - SLAB, 0.0,
-          '#d8d4cc')  # central wall between the flights, all storeys
-    # Top floor: guard wall where no flight continues upwards
-    w.box(FX, FLIGHT_Y0, FLOORS[-1], 2 * FX - 0.1, 0.08, 1.0, 0.0, '#d8d4cc')
-    slab(w, HROOF)
+    with w.semantic('wall'):
+        w.box(0.0, (FLIGHT_Y0 + FLIGHT_Y1) / 2, 0.0, 0.1, FLIGHT_Y1 - FLIGHT_Y0, HROOF - SLAB,
+              0.0, '#d8d4cc')  # central wall between the flights, all storeys
+        # Top floor: guard wall where no flight continues upwards
+        w.box(FX, FLIGHT_Y0, FLOORS[-1], 2 * FX - 0.1, 0.08, 1.0, 0.0, '#d8d4cc')
+    slab(w, HROOF, 'ceiling')
     # Street context: neighbor buildings, sidewalk trees, lamp posts, cars
     for (x, y, lx, ly, h) in ((-17, 0, 8, 16, 12), (17, 0, 8, 16, 9), (0, 13, 30, 6, 15)):
         props.building(w, rng, x, y, lx, ly, h)

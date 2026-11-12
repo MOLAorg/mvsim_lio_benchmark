@@ -12,6 +12,9 @@ generated data is NOT in git; on the machine where it was made it lives in
 1. `worlds/<name>/world.py` (the source of truth) defines the geometry with
    `tools/mvsim_lio/world.py` (+ `props.py`) and the trajectories with
    `tools/mvsim_lio/traj.py` (waypoints `P`, `Stop`, `Spin`, per carrier).
+   Every primitive gets a semantic class (`labels.py`) from a
+   `with w.semantic(...)` context (props tag themselves, one instance per
+   call); `build_worlds.py` prints UNLABELED if any primitive has none.
 2. `tools/build_worlds.py` writes `world.xml`, `trajectories/<t>.tum` (20 Hz
    knots, the canonical trajectory), `stats.json` and `trajectories.png`, and
    runs a clearance check (prints COLLISION). Output is deterministic: check
@@ -24,6 +27,8 @@ generated data is NOT in git; on the machine where it was made it lives in
    LiDAR error model, parameters drawn per (world, trajectory, rig) from
    `REAL_ERROR_RANGES` and written to `<variant>.errors.json`). The published
    set is `VARIANTS` (seven variants); other rigs are defined but not rendered.
+   `--labels` adds the per-point `label`/`instance` fields (MRPT/mvsim#182);
+   it does not change the points.
 4. `tools/screenshot.py`, `tools/validate_mola.py`, `tools/make_docs.py`
    (README tables between `<!-- BEGIN/END x -->` markers, per-world READMEs,
    `MANIFEST.tsv`, `SHA256SUMS`). Do not edit generated tables by hand.
