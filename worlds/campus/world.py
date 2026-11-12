@@ -55,16 +55,19 @@ def make_world():
     props.building(w, rng, cx + L / 2 - d / 2, cy, d, L - 2 * d - 1, h, z=z0)
     # Central plaza: paving, fountain, benches, lamps, a sculpture
     zp = zmin(0, 10, 60, 60)
-    w.box(0.0, 10.0, zp - 0.3, 56.0, 56.0, 0.35, 0.0, '#c8c0b0')
+    with w.semantic('other-ground'):
+        w.box(0.0, 10.0, zp - 0.3, 56.0, 56.0, 0.35, 0.0, '#c8c0b0')
     zp += 0.05
-    w.cylinder(0.0, 10.0, zp, 5.0, 0.5, color='#a0a0a0')
-    w.cylinder(0.0, 10.0, zp, 0.5, 3.0, color='#a0a0a0')
+    with w.instance(), w.semantic('other-structure'):
+        w.cylinder(0.0, 10.0, zp, 5.0, 0.5, color='#a0a0a0')
+        w.cylinder(0.0, 10.0, zp, 0.5, 3.0, color='#a0a0a0')
     for a in np.arange(0, 2 * math.pi, math.pi / 4):
         props.bench(w, 9.0 * math.cos(a), 10.0 + 9.0 * math.sin(a), zp, a + math.pi / 2)
     for x, y in ((-20, -10), (20, -10), (20, 30), (-20, 30), (-20, 10), (20, 10)):
         props.lamp_post(w, x, y, zp, 0.0, height=5.0, arm=0.4)
-    w.box(-12.0, 24.0, zp, 2.0, 2.0, 1.2, 0.3, '#707070')
-    w.sphere(-12.0, 24.0, zp + 2.2, 1.0, color='#b08040')
+    with w.instance(), w.semantic('other-structure'):
+        w.box(-12.0, 24.0, zp, 2.0, 2.0, 1.2, 0.3, '#707070')
+        w.sphere(-12.0, 24.0, zp + 2.2, 1.0, color='#b08040')
     # Ring road: lamps and an avenue of trees
     ring = RING + RING[:1]
     for (ax, ay), (bx, by) in zip(ring[:-1], ring[1:]):
@@ -103,14 +106,17 @@ def make_world():
         props.fence(w, ax, ay, bx, by, g, spacing=3.0, height=2.0, rails=3)
     props.fence(w, fx0, fy1, fx0, fy0 + 35.0, g, spacing=3.0, height=2.0, rails=3)  # gate gap
     for x in (fx0 + 4.0, fx1 - 4.0):
-        for dy in (-3.66, 3.66):
-            w.cylinder(x, (fy0 + fy1) / 2 + dy, g(x, (fy0 + fy1) / 2) - 0.2, 0.06, 2.64,
-                       color='#f0f0f0')
-        w.cylinder(x, (fy0 + fy1) / 2 - 3.66, g(x, (fy0 + fy1) / 2) + 2.4, 0.06, 7.32,
-                   yaw=math.pi / 2, pitch=math.pi / 2, color='#f0f0f0')
+        with w.instance(), w.semantic('other-structure'):  # goal
+            for dy in (-3.66, 3.66):
+                w.cylinder(x, (fy0 + fy1) / 2 + dy, g(x, (fy0 + fy1) / 2) - 0.2, 0.06, 2.64,
+                           color='#f0f0f0')
+            w.cylinder(x, (fy0 + fy1) / 2 - 3.66, g(x, (fy0 + fy1) / 2) + 2.4, 0.06, 7.32,
+                       yaw=math.pi / 2, pitch=math.pi / 2, color='#f0f0f0')
     zb = g(-80.0, fy1 + 6.0)
-    for k in range(4):
-        w.box(-80.0, fy1 + 5.0 + 0.8 * k, zb - 0.2, 40.0, 0.8, 0.6 + 0.45 * k, 0.0, '#9090a0')
+    with w.instance(), w.semantic('other-structure'):  # bleachers
+        for k in range(4):
+            w.box(-80.0, fy1 + 5.0 + 0.8 * k, zb - 0.2, 40.0, 0.8, 0.6 + 0.45 * k, 0.0,
+                  '#9090a0')
     return w
 
 

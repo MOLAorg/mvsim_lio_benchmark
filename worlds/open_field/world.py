@@ -28,7 +28,8 @@ def make_world():
         x, y = rng.uniform(-170, 170, size=2)
         if abs(y - 20) < 8:
             continue
-        w.cylinder(x, y, g(x, y) - 0.3, 0.12, rng.uniform(3, 7), color='#806a50')
+        with w.instance(), w.semantic('pole'):
+            w.cylinder(x, y, g(x, y) - 0.3, 0.12, rng.uniform(3, 7), color='#806a50')
     # Fence line along y = 60, from x = -150 to 50
     for k in range(8):
         x0 = -150 + 25 * k
@@ -39,10 +40,12 @@ def make_world():
     # Hay bales (cylinders lying down)
     for _ in range(10):
         x, y = rng.uniform(40, 120), rng.uniform(-60, 10)
-        w.cylinder(x, y, g(x, y) + 0.7, 0.7, 1.2, yaw=rng.uniform(0, math.pi),
-                   pitch=math.pi / 2, color='#d8c070')
+        with w.instance(), w.semantic('other-object'):
+            w.cylinder(x, y, g(x, y) + 0.7, 0.7, 1.2, yaw=rng.uniform(0, math.pi),
+                       pitch=math.pi / 2, color='#d8c070')
     # Small shed
-    w.box(-110, -90, g(-110, -90) - 0.3, 4.0, 3.0, 2.8, 0.3, '#a05040')
+    with w.instance(), w.semantic('building'):
+        w.box(-110, -90, g(-110, -90) - 0.3, 4.0, 3.0, 2.8, 0.3, '#a05040')
     return w
 
 

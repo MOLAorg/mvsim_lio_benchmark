@@ -23,12 +23,15 @@ SCREENSHOTS = [
 def make_world():
     rng = np.random.default_rng(SEED)
     w = World('parking_lot', __doc__, extent=(-80, 80, -65, 62))
-    w.hplane(-85, 85, -70, 65, 0.0, color='#484848')
+    with w.semantic('parking'):
+        w.hplane(-85, 85, -70, 65, 0.0, color='#484848')
     props.building(w, rng, 0.0, 46.0, 120.0, 20.0, 8.0, pilaster=5.0, color='#c8c0b0',
                    entrance_side=0)
-    w.box(0.0, 34.5, 0.0, 120.0, 3.0, 0.15, 0.0, '#a8a8a0')  # store front sidewalk
+    with w.semantic('sidewalk'):
+        w.box(0.0, 34.5, 0.0, 120.0, 3.0, 0.15, 0.0, '#a8a8a0')  # store front sidewalk
     for x in (-40.0, -10.0, 20.0, 45.0):
-        w.box(x, 34.5, 0.15, 4.0, 1.0, 1.0, 0.0, '#909090')  # cart corral by the store
+        with w.instance(), w.semantic('other-structure'):
+            w.box(x, 34.5, 0.15, 4.0, 1.0, 1.0, 0.0, '#909090')  # cart corral by the store
     for yc in ROWS:
         for side in (-1, 1):
             for x in BAY_X:
@@ -37,12 +40,14 @@ def make_world():
                     props.car(w, rng, x + rng.uniform(-0.1, 0.1), yy, 0.0,
                               side * math.pi / 2 + math.pi + rng.uniform(-0.04, 0.04))
         for xi in (-58.0, 58.0):
-            w.box(xi, yc, 0.0, 4.0, 10.0, 0.15, 0.0, '#a8a8a0')  # end island
+            with w.semantic('other-ground'):
+                w.box(xi, yc, 0.0, 4.0, 10.0, 0.15, 0.0, '#a8a8a0')  # end island
             props.tree(w, rng, xi, yc - 2.5, 0.15, height=rng.uniform(6, 8), crown=2.0)
             props.lamp_post(w, xi, yc + 2.5, 0.15, 0.0, height=9.0, arm=0.8)
         for x in (-25.0, 5.0, 35.0):
-            w.cylinder(x, yc, 0.0, 0.15, 10.0, color=props.C_METAL)  # light pole
-            w.box(x, yc, 9.8, 1.2, 0.6, 0.3, 0.0, '#e8e8d0')
+            with w.instance(), w.semantic('pole'):
+                w.cylinder(x, yc, 0.0, 0.15, 10.0, color=props.C_METAL)  # light pole
+                w.box(x, yc, 9.8, 1.2, 0.6, 0.3, 0.0, '#e8e8d0')
     # Perimeter
     for x in np.arange(-78.0, 78.0, 1.3):
         props.bush(w, rng, x, -62.0, 0.0, size=0.9)

@@ -32,13 +32,16 @@ def make_world():
                        crown=rng.uniform(1.3, 1.6), trunk_r=rng.uniform(0.08, 0.14), leaves=25,
                        branches=3)
             if k % 3 == 1:
-                w.cylinder(x + 2.0, y, g(x + 2.0, y) - 0.3, 0.05, 2.8, color='#a09070')  # post
+                with w.instance(), w.semantic('pole'):
+                    w.cylinder(x + 2.0, y, g(x + 2.0, y) - 0.3, 0.05, 2.8, color='#a09070')
     # Perimeter: hedge (east), fence (west), shed and water tank (north-east)
     for y in np.arange(-70.0, 70.0, 1.2):
         props.bush(w, rng, 80.0, y, g(80.0, y), size=1.2)
     props.fence(w, -80, -70, -80, 70, g, spacing=3.0)
-    w.box(73.0, 70.5, g(73, 70.5) - 0.3, 8.0, 6.0, 4.0, 0.0, '#a04838')
-    w.cylinder(60.0, 71.0, g(60, 71) - 0.2, 2.5, 4.0, color='#8090a0')
+    with w.instance(), w.semantic('building'):
+        w.box(73.0, 70.5, g(73, 70.5) - 0.3, 8.0, 6.0, 4.0, 0.0, '#a04838')
+    with w.instance(), w.semantic('other-structure'):  # water tank
+        w.cylinder(60.0, 71.0, g(60, 71) - 0.2, 2.5, 4.0, color='#8090a0')
     return w
 
 

@@ -37,24 +37,26 @@ def make_world():
         r = float(rng.choice([rng.uniform(0.3, 0.7), rng.uniform(0.7, 1.6)], p=[0.7, 0.3]))
         if dist_to_polyline(x, y, pa) < 3.0 + r or dist_to_polyline(x, y, pb) < 3.0 + r:
             continue
-        w.sphere(x, y, g(x, y) + 0.3 * r, r, color='#8a8680')
-        n += 1
-        if rng.uniform() < 0.2:  # small cluster around big rocks
-            for _ in range(3):
-                a = rng.uniform(0, 2 * math.pi)
-                rr = r * rng.uniform(0.3, 0.6)
-                qx, qy = x + math.cos(a) * (r + rr), y + math.sin(a) * (r + rr)
-                if dist_to_polyline(qx, qy, pa) > 3.0 and dist_to_polyline(qx, qy, pb) > 3.0:
-                    w.sphere(qx, qy, g(qx, qy) + 0.2 * rr, rr, color='#7a7670')
+        with w.instance(), w.semantic('other-object'):  # a rock and its cluster
+            w.sphere(x, y, g(x, y) + 0.3 * r, r, color='#8a8680')
+            n += 1
+            if rng.uniform() < 0.2:  # small cluster around big rocks
+                for _ in range(3):
+                    a = rng.uniform(0, 2 * math.pi)
+                    rr = r * rng.uniform(0.3, 0.6)
+                    qx, qy = x + math.cos(a) * (r + rr), y + math.sin(a) * (r + rr)
+                    if dist_to_polyline(qx, qy, pa) > 3.0 and dist_to_polyline(qx, qy, pb) > 3.0:
+                        w.sphere(qx, qy, g(qx, qy) + 0.2 * rr, rr, color='#7a7670')
     for _ in range(15):
         x, y = rng.uniform(-120, 120, size=2)
         if dist_to_polyline(x, y, pa) < 5 or dist_to_polyline(x, y, pb) < 5:
             continue
-        w.cylinder(x, y, g(x, y) - 0.3, 0.2, rng.uniform(3, 6), color='#5a4a3a')
-        for _ in range(3):
-            w.cylinder(x, y, g(x, y) + rng.uniform(1.5, 3.0), 0.07, rng.uniform(1, 2),
-                       yaw=rng.uniform(-math.pi, math.pi), pitch=math.radians(rng.uniform(30, 70)),
-                       color='#5a4a3a')
+        with w.instance(), w.semantic('trunk'):  # dead tree
+            w.cylinder(x, y, g(x, y) - 0.3, 0.2, rng.uniform(3, 6), color='#5a4a3a')
+            for _ in range(3):
+                w.cylinder(x, y, g(x, y) + rng.uniform(1.5, 3.0), 0.07, rng.uniform(1, 2),
+                           yaw=rng.uniform(-math.pi, math.pi),
+                           pitch=math.radians(rng.uniform(30, 70)), color='#5a4a3a')
     return w
 
 

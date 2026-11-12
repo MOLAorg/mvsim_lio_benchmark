@@ -59,22 +59,26 @@ def block_buildings(w, rng, cx, cy, kind):
             props.tree(w, rng, x, y, 0.0, leaves=35)
         for k in range(6):
             props.bench(w, cx + 5, cy - 30 + 12 * k, 0.0, math.pi / 2)
-        w.box(cx + 12, cy + 12, 0.0, 4.0, 4.0, 3.0, 0.0, '#b07050')  # kiosk
-        w.cylinder(cx, cy, 0.0, 3.0, 0.6, color='#909090')  # fountain basin
-        w.cylinder(cx, cy, 0.0, 0.4, 2.5, color='#909090')
+        with w.instance(), w.semantic('other-structure'):
+            w.box(cx + 12, cy + 12, 0.0, 4.0, 4.0, 3.0, 0.0, '#b07050')  # kiosk
+        with w.instance(), w.semantic('other-structure'):
+            w.cylinder(cx, cy, 0.0, 3.0, 0.6, color='#909090')  # fountain basin
+            w.cylinder(cx, cy, 0.0, 0.4, 2.5, color='#909090')
 
 
 def make_world():
     rng = np.random.default_rng(SEED)
     E = 185.0
     w = World('urban_street', __doc__, extent=(-E, E, -E, E))
-    w.hplane(-E, E, -E, E, 0.0, color='#505050')
+    with w.semantic('road'):
+        w.hplane(-E, E, -E, E, 0.0, color='#505050')
     kinds = {(0, 0): 'quad', (1, 0): 'court', (2, 0): 'quad', (0, 1): 'slabs', (1, 1): 'quad',
              (2, 1): 'park', (0, 2): 'quad', (1, 2): 'slabs', (2, 2): 'court'}
     for i in range(3):
         for j in range(3):
             cx, cy = (i - 1) * PITCH, (j - 1) * PITCH
-            w.box(cx, cy, 0.0, 2 * HALF, 2 * HALF, CURB, 0.0, '#a8a8a0')  # sidewalk
+            with w.semantic('sidewalk'):
+                w.box(cx, cy, 0.0, 2 * HALF, 2 * HALF, CURB, 0.0, '#a8a8a0')
             block_buildings(w, rng, cx, cy, kinds[(i, j)])
             # Street furniture along the four curbs:
             for side in range(4):
@@ -102,8 +106,10 @@ def make_world():
         for y in STREETS[1:3]:
             for dx, dy in ((1, 1), (-1, -1)):
                 px, py = x + dx * (8 + 0.6), y + dy * (8 + 0.6)
-                w.cylinder(px, py, CURB, 0.1, 4.5, color='#404040')
-                w.box(px, py, CURB + 3.2, 0.35, 0.35, 1.0, 0.0, '#202020')
+                with w.instance(), w.semantic('pole'):
+                    w.cylinder(px, py, CURB, 0.1, 4.5, color='#404040')
+                    with w.semantic('traffic-sign'):
+                        w.box(px, py, CURB + 3.2, 0.35, 0.35, 1.0, 0.0, '#202020')
     # Parked cars (parallel, in the curb lanes) on two east-west streets
     for y in (-50.0, 50.0):
         for side in (-1, 1):

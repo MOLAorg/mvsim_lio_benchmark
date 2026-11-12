@@ -14,6 +14,7 @@ PATH (see README: it must include the timestamp rounding fix).
 
 Usage: tools/generate.py [--jobs 5] [--cores-per-job 8] [--first-core 0]
                          [--worlds a,b] [--variants os1_32-noisy-rolling,...] [--force]
+                         [--labels]
 """
 import argparse
 import json
@@ -32,6 +33,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'tools'))
 
 from mvsim_lio import densify  # noqa: E402
+from mvsim_lio.labels import OUTLIER  # noqa: E402
 
 # Default variant set: all six (noise x shutter) combinations for the main
 # rig, and the noisy rolling-shutter one for the second rig.
@@ -76,7 +78,7 @@ def list_sequences(worlds):
     return out
 
 
-def run_one(world, traj, variant, out_dir, work_dir, cores, force):
+def run_one(world, traj, variant, out_dir, work_dir, cores, force, labels=False):
     rig, noise, shutter = variant.split('-')
     odir = out_dir / world / traj
     odir.mkdir(parents=True, exist_ok=True)
@@ -95,6 +97,9 @@ def run_one(world, traj, variant, out_dir, work_dir, cores, force):
            '--seed', str(seed_for(world, traj)), '--shutter', shutter]
     if noise == 'clean':
         cmd.append('--noiseless')
+    if labels:
+        # Per-point semantic and instance labels; mixed returns are outliers.
+        cmd += ['--labels', '--mixed-return-label', str(OUTLIER)]
     env = dict(os.environ, MVSIM_LIO_RIG=str(ROOT / 'rigs' / f'{rig}.rig.xml'),
                TBB_NUM_THREADS=str(len(expand(cores))))
     if noise == 'real':
@@ -136,6 +141,8 @@ def main():
     ap.add_argument('--trajs', default='', help='comma-separated trajectory names')
     ap.add_argument('--variants', default=','.join(VARIANTS))
     ap.add_argument('--force', action='store_true')
+    ap.add_argument('--labels', action='store_true',
+                    help='store the per-point "label" and "instance" fields (tools/mvsim_lio/labels.py)')
     a = ap.parse_args()
 
     if not shutil.which('mvsim-dataset-gen'):
@@ -168,7 +175,7 @@ def main():
     def task(args):
         cores = pool.get()
         try:
-            msg = run_one(*args, out_dir, work_dir, cores, a.force)
+            msg = run_one(*args, out_dir, work_dir, cores, a.force, a.labels)
         finally:
             pool.put(cores)
         print(msg, flush=True)
