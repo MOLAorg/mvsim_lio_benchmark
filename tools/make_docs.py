@@ -24,7 +24,8 @@ sys.path.insert(0, str(ROOT / 'tools'))
 from build_worlds import load_world_module  # noqa: E402
 
 VARIANT_ORDER = ['os1_32-clean-global', 'os1_32-clean-rolling', 'os1_32-noisy-global',
-                 'os1_32-noisy-rolling', 'vlp16-noisy-rolling']
+                 'os1_32-noisy-rolling', 'os1_32-real-global', 'os1_32-real-rolling',
+                 'vlp16-noisy-rolling']
 
 
 def world_names():
@@ -93,6 +94,58 @@ def human(n):
         n /= 1024.0
 
 
+def fmt_count(n):
+    for unit, div in (('billion', 1e9), ('million', 1e6), ('thousand', 1e3)):
+        if n >= div:
+            return f'{n / div:.2f} {unit}'
+    return str(n)
+
+
+def totals_block(descs, data):
+    """Aggregated figures: trajectories, carriers, and what the rawlogs hold."""
+    trajs = [s for d in descs for s in d['stats'].values()]
+    km = sum(s['length'] for s in trajs) / 1000
+    hours = sum(s['duration'] for s in trajs) / 3600
+    carriers = sorted({s['platform'] for s in trajs})
+    per = {}
+    for f in sorted(data.glob('*/*/*.counts.json')):
+        v = f.name[:-len('.counts.json')]
+        c = json.loads(f.read_text())
+        acc = per.setdefault(v, {'rawlogs': 0, 'sweeps': 0, 'points': 0, 'imu': 0})
+        acc['rawlogs'] += 1
+        for k in ('sweeps', 'points', 'imu'):
+            acc[k] += c[k]
+    order = [v for v in VARIANT_ORDER if v in per] + sorted(set(per) - set(VARIANT_ORDER))
+    size = 0
+    if (ROOT / 'MANIFEST.tsv').exists():
+        size = sum(int(line.split('\t')[1]) for line in
+                   (ROOT / 'MANIFEST.tsv').read_text().splitlines()[1:])
+    rows = ['| | |', '|---|---|',
+            f'| worlds | {len(descs)} |',
+            f'| trajectories | {len(trajs)}, of {len(carriers)} carriers ({", ".join(carriers)}) |',
+            f'| trajectory length | {km:.1f} km ({hours:.2f} h) per variant |',
+            f'| sensor variants | {len(order)} |']
+    if per:
+        n_seq = sum(per[v]['rawlogs'] for v in order)
+        rows += [
+            f'| rendered sequences | {n_seq} ({km * len(order):.0f} km, '
+            f'{hours * len(order):.1f} h of sensor data) |',
+            f'| LiDAR sweeps | {fmt_count(sum(per[v]["sweeps"] for v in order))} |',
+            f'| LiDAR points | {fmt_count(sum(per[v]["points"] for v in order))} |',
+            f'| IMU samples | {fmt_count(sum(per[v]["imu"] for v in order))} |']
+    if size:
+        rows.append(f'| data size | {human(size)} |')
+    if per:
+        rows += ['', 'Per variant:', '',
+                 '| variant | sequences | LiDAR sweeps | LiDAR points | points per sweep | IMU samples |',
+                 '|---|---|---|---|---|---|']
+        for v in order:
+            c = per[v]
+            rows.append(f'| `{v}` | {c["rawlogs"]} | {c["sweeps"]:,} | {fmt_count(c["points"])} | '
+                        f'{c["points"] / max(c["sweeps"], 1):,.0f} | {c["imu"]:,} |')
+    return '\n'.join(rows)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--manifest', action='store_true')
@@ -135,7 +188,7 @@ def main():
 
     if a.manifest:
         files = sorted(p for p in data.glob('*/*/*') if p.is_file() and p.suffix in
-                       ('.rawlog', '.tum', '.log') and not p.relative_to(data).parts[0]
+                       ('.rawlog', '.tum', '.log', '.json') and not p.relative_to(data).parts[0]
                        .startswith('.'))
         with ThreadPoolExecutor(max_workers=16) as ex:
             hashes = list(ex.map(sha256, files))
@@ -171,26 +224,27 @@ def main():
         dur = next(d['stats'][t]['duration'] for d in descs if d['name'] == w)
         gt.setdefault(w, {}).setdefault(v, []).append((float(m.group(1)), dur))
     if gt:
-        # Worlds whose generator logs are gone keep their previous rows.
-        old_rows = {}
+        # Cells whose generator logs are gone (first release) keep their
+        # previous values.
+        old_cells = {}
         m = re.search(r'<!-- BEGIN gentime -->\n(.*?)<!-- END gentime -->', readme, re.S)
+        header = []
         for line in (m.group(1).splitlines() if m else []):
             cells = [c.strip() for c in line.strip('|').split('|')]
-            if line.startswith('| ') and cells[0] not in ('world',) and cells[0] not in gt:
-                old_rows[cells[0]] = line
+            if line.startswith('| world |'):
+                header = cells[1:]
+            elif line.startswith('| ') and header:
+                old_cells[cells[0]] = dict(zip(header, cells[1:]))
         variants = list(VARIANT_ORDER)
         rows = ['Generation speed (simulated seconds per wall-clock second, 8 cores per job, '
                 'Xeon E5-2696 v4 at 2.2 GHz, on a shared machine), per world and variant:', '',
                 '| world | ' + ' | '.join(variants) + ' |', '|---|' + '---|' * len(variants)]
-        for w in sorted(set(gt) | set(old_rows)):
-            if w not in gt:
-                rows.append(old_rows[w])
-                continue
+        for w in sorted(set(gt) | set(old_cells)):
             cells = []
             for v in variants:
-                runs = gt[w].get(v, [])
+                runs = gt.get(w, {}).get(v, [])
                 cells.append(f'{sum(r[1] for r in runs) / sum(r[0] for r in runs):.1f}x'
-                             if runs else '')
+                             if runs else old_cells.get(w, {}).get(v, ''))
             rows.append(f'| {w} | ' + ' | '.join(cells) + ' |')
         readme = replace_block(readme, 'gentime', '\n'.join(rows))
     vfile = data / 'validation' / 'summary.json'
@@ -214,6 +268,7 @@ def main():
                     cells.append(f'{r["ape_se3"]:.2f} m / {r["drift_pct"]:.2f} %')
             rows.append(f'| `{s}` | ' + ' | '.join(cells) + ' |')
         readme = replace_block(readme, 'validation', '\n'.join(rows))
+    readme = replace_block(readme, 'totals', totals_block(descs, data))
     (ROOT / 'README.md').write_text(readme)
 
 

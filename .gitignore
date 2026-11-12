@@ -13,3 +13,5 @@ gt_200hz.tum
 /validation/
 __pycache__/
 *.pyc
+/build/
+*.bin
