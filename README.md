@@ -198,7 +198,7 @@ Total: 30 trajectories, 148 minutes, per sensor variant.
 
 ## Sensors and variants
 
-Each trajectory is rendered with these seven variants (files are named
+Each trajectory is rendered with these nine variants (files are named
 `<rig>-<noise>-<shutter>`):
 
 | variant | LiDAR | LiDAR noise | IMU noise | shutter |
@@ -210,13 +210,18 @@ Each trajectory is rendered with these seven variants (files are named
 | `os1_32-real-global` | OS1-32 style | realistic error model (below) | MEMS (below) | global |
 | `os1_32-real-rolling` | OS1-32 style | realistic error model (below) | MEMS (below) | rolling |
 | `vlp16-noisy-rolling` | VLP-16 style | 2 cm | MEMS (below) | rolling |
+| `os1_64-noisy-rolling` | OS1-64 style | 2 cm | MEMS (below) | rolling |
+| `os1_64-real-rolling` | OS1-64 style | realistic error model (below) | MEMS (below) | rolling |
 
 The `real` variants are the closest to a real sensor and the intended
 default for benchmarking; the others isolate one factor at a time. The
 noise seed depends only on the sequence, so the variants of a sequence are
 paired (e.g. `-global` and `-rolling` share their error parameters).
+The `os1_64` variants differ from their `os1_32` counterparts only in the
+ring count (same FOV, columns and range, and the same error model
+parameters), to compare LiDAR densities.
 
-Rigs (`rigs/*.rig.xml`, sensor parameters pinned in the files). The first two
+Rigs (`rigs/*.rig.xml`, sensor parameters pinned in the files). The first three
 are rendered in the published data; the others are defined for
 `tools/generate.py` and used by derived works, but not rendered here:
 
@@ -224,8 +229,8 @@ are rendered in the published data; the others are defined for
 |---|---|---|---|---|---|---|
 | `os1_32` | 32, uniform | 45 deg (+-22.5) | 1024 | 10 Hz | 0.5 to 60 m | 0.75 m |
 | `vlp16` | 16, uniform | 30 deg (+-15) | 1808 | 10 Hz | 0.4 to 100 m | 0.75 m |
+| `os1_64` | 64, uniform | 45 deg (+-22.5) | 1024 | 10 Hz | 0.5 to 60 m | 0.75 m |
 | `os1_16` | 16, uniform | 33.2 deg | 1024 | 10 Hz | 0.5 to 120 m | 0.75 m |
-| `os1_64` | 64, uniform | 42.4 deg | 1024 | 10 Hz | 0.5 to 120 m | 0.75 m |
 | `os1_64_car` | 64, uniform | 42.4 deg | 1024 | 10 Hz | 0.5 to 120 m | 1.80 m |
 | `os0_128` | 128, uniform | 90 deg | 1024 | 10 Hz | 0.3 to 50 m | 0.75 m |
 | `hdl64` | 64 | -24.8 to +2.0 deg | 2048 | 10 Hz | 0.9 to 120 m | 1.73 m |
@@ -377,7 +382,7 @@ Per sequence, under `<world>/<trajectory>/`:
 
 | file | contents |
 |---|---|
-| `<variant>.rawlog` | MRPT rawlog (gzip): `CObservationPointCloud` (`lidar1`, a `CGenericPointsMap` with fields `x y z t ring`, plus `label instance` if rendered with labels; `sensorPose` = `lidar1` in `base_link`), `CObservationIMU` (`imu1`), `CObservationOdometry` (`odom`), in time order |
+| `<variant>.rawlog` | MRPT rawlog (gzip): `CObservationPointCloud` (`lidar1`, a `CGenericPointsMap` with fields `x y z t ring`, plus `label instance` if rendered with labels; `sensorPose` = `lidar1` in `base_link`), `CObservationIMU` (`imu1`; `sensorPose` = `imu1` in `base_link`), `CObservationOdometry` (`odom`), in time order |
 | `<variant>.gt.tum` | `base_link` ground truth at the sweep start times (10 Hz) |
 | `<variant>.lidar1.gt.tum` | `lidar1` ground truth at the sweep start times |
 | `<variant>.gen.log` | generator command line and log |
@@ -452,7 +457,7 @@ sequence against the trajectory.
 export MVSIM_LIO_MVSIM_INSTALL=/path/to/mvsim/install   # if not in ~/ros2_ws/install
 source tools/env.sh
 tools/build_worlds.py              # worlds/*/world.xml, trajectories, plots
-tools/generate.py --jobs 5 --cores-per-job 8   # all sequences and the seven variants
+tools/generate.py --jobs 5 --cores-per-job 8   # all sequences and the nine variants
 tools/screenshot.py                # worlds/*/screenshot*.png
 tools/make_banner.py --maps <dir>  # docs/banner.{gif,mp4} (maps from tools/map_export)
 tools/validate_mola.py --variant os1_32-noisy-rolling   # optional sanity check
@@ -465,7 +470,7 @@ MVSim build.
 
 ### Data provenance
 
-Three MVSim builds produced the published files:
+These MVSim builds produced the published files:
 
 - The 2026-11-04 release (the first 13 worlds) was rendered with a local
   build of the three fixes before their upstream review.
@@ -479,6 +484,16 @@ Three MVSim builds produced the published files:
 - The `os1_32-real-global` and `os1_32-real-rolling` variants of all 30
   sequences were rendered on 2026-11-11 with upstream MVSim `develop` at
   commit 5c7e3a86, which includes the realistic error model.
+- The `os1_64-*` variants were rendered on 2026-11-12 with MVSim 2.1.0
+  (`develop` at 1ffefda4) plus MRPT/mvsim#182 (point labels) and #183 (IMU
+  sensor pose).
+
+Until MRPT/mvsim#183, the generator left the `sensorPose` of the IMU
+observations at the identity. The samples themselves were already simulated
+at the mounting pose. On 2026-11-12 the `imu1` observations of every
+`os1_32-*` and `vlp16-*` file got their mounting pose, in place: only that
+field changed, and a patched file is byte-identical to a render with the
+fixed generator ([`tools/rawlog_tools`](tools/rawlog_tools/README.md)).
 
 The review of the timestamp fix made the trajectory interpolation use times
 relative to the first knot. Upstream renders of the first-release sequences
