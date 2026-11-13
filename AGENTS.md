@@ -64,7 +64,11 @@ variants were rendered on 2026-11-11 with develop at 5c7e3a86; the `os1_64-*`
 ones on 2026-11-12 with 2.1.0 plus #182 and #183. On 2026-11-12 the `imu1`
 observations of all `os1_32`/`vlp16` files were patched in place with their
 mounting `sensorPose` (#183: the generator left it at identity; samples
-unchanged). Do not regenerate first-release sequences without the owner's
+unchanged). Labels (2026-11-12/13, same build as `os1_64`): the
+`os1_32-real-*` files were replaced only where identical (all 60), and all of
+`os1_32-clean-rolling` was replaced (24 first-release files differ at the
+float-rounding level); the other `os1_32` and the `vlp16` variants carry no
+labels. Do not regenerate first-release sequences without the owner's
 approval. Their generator logs were lost on 2026-11-06 (deleted to
 queue a regeneration that was then cancelled), and are not in the manifest.
 

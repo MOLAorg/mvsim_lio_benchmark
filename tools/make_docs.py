@@ -88,10 +88,11 @@ def sha256(path):
 
 
 def human(n):
+    # SI units (1 GB = 1e9 bytes), as hosting quotas are stated.
     for u in ('B', 'KB', 'MB', 'GB', 'TB'):
-        if n < 1024 or u == 'TB':
+        if n < 1000 or u == 'TB':
             return f'{n:.1f} {u}' if u != 'B' else f'{n} B'
-        n /= 1024.0
+        n /= 1000.0
 
 
 def fmt_count(n):
@@ -215,12 +216,17 @@ def main():
         readme = replace_block(readme, 'manifest', '\n'.join(rows))
     # Generation time, from the generator logs
     gt = {}
+    ncores = {}
     for log in sorted(data.glob('*/*/*.gen.log')):
-        m = re.search(r'wall time ([0-9.]+) s', log.read_text()[-300:])
+        text = log.read_text()
+        m = re.search(r'wall time ([0-9.]+) s', text[-300:])
         if not m:
             continue
         w, t = log.parent.parent.name, log.parent.name
         v = log.name[:-len('.gen.log')]
+        c = re.search(r'taskset -c (\d+)-(\d+)', text[:300])
+        if c:
+            ncores.setdefault(v, []).append(int(c.group(2)) - int(c.group(1)) + 1)
         dur = next(d['stats'][t]['duration'] for d in descs if d['name'] == w)
         gt.setdefault(w, {}).setdefault(v, []).append((float(m.group(1)), dur))
     if gt:
@@ -232,13 +238,18 @@ def main():
         for line in (m.group(1).splitlines() if m else []):
             cells = [c.strip() for c in line.strip('|').split('|')]
             if line.startswith('| world |'):
-                header = cells[1:]
+                header = [c.split()[0] for c in cells[1:]]
             elif line.startswith('| ') and header:
                 old_cells[cells[0]] = dict(zip(header, cells[1:]))
         variants = list(VARIANT_ORDER)
-        rows = ['Generation speed (simulated seconds per wall-clock second, 8 cores per job, '
-                'Xeon E5-2696 v4 at 2.2 GHz, on a shared machine), per world and variant:', '',
-                '| world | ' + ' | '.join(variants) + ' |', '|---|' + '---|' * len(variants)]
+        # Most common core count of each variant's jobs (8 for the first
+        # release, whose logs are gone).
+        cores = {v: max(set(n), key=n.count) for v, n in ncores.items()}
+        rows = ['Generation speed (simulated seconds per wall-clock second; cores per job in '
+                'each column, Xeon E5-2696 v4 at 2.2 GHz, on a shared machine), '
+                'per world and variant:', '',
+                '| world | ' + ' | '.join(f'{v} ({cores.get(v, 8)} cores)' for v in variants)
+                + ' |', '|---|' + '---|' * len(variants)]
         for w in sorted(set(gt) | set(old_cells)):
             cells = []
             for v in variants:

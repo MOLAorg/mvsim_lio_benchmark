@@ -45,12 +45,12 @@ parameters are pinned in this repository, and the noise uses fixed seeds.
 | worlds | 15 |
 | trajectories | 30, of 5 carriers (car, dog, handheld, legged, ugv) |
 | trajectory length | 20.1 km (2.46 h) per variant |
-| sensor variants | 7 |
-| rendered sequences | 210 (141 km, 17.2 h of sensor data) |
-| LiDAR sweeps | 620.68 thousand |
-| LiDAR points | 15.70 billion |
-| IMU samples | 12.41 million |
-| data size | 153.1 GB |
+| sensor variants | 9 |
+| rendered sequences | 270 (181 km, 22.2 h of sensor data) |
+| LiDAR sweeps | 798.02 thousand |
+| LiDAR points | 24.66 billion |
+| IMU samples | 15.96 million |
+| data size | 264.5 GB |
 
 Per variant:
 
@@ -63,6 +63,8 @@ Per variant:
 | `os1_32-real-global` | 30 | 88,669 | 2.16 billion | 24,407 | 1,772,920 |
 | `os1_32-real-rolling` | 30 | 88,669 | 2.16 billion | 24,407 | 1,772,920 |
 | `vlp16-noisy-rolling` | 30 | 88,669 | 2.11 billion | 23,825 | 1,772,920 |
+| `os1_64-noisy-rolling` | 30 | 88,669 | 4.63 billion | 52,249 | 1,772,920 |
+| `os1_64-real-rolling` | 30 | 88,669 | 4.32 billion | 48,746 | 1,772,920 |
 <!-- END totals -->
 
 ## Worlds
@@ -343,6 +345,9 @@ the surface its ray hit, and `instance` (0 for extended surfaces such as
 roads, terrain, floors and walls). Mixed returns, a range between two
 surfaces, are labeled `outlier`. Labels never change the points: a labeled
 render is identical to the unlabeled one with the same MVSim build.
+The `os1_32-clean-rolling`, `os1_32-real-*` and `os1_64-*` variants carry the
+labels. The others (`os1_32-clean-global`, `os1_32-noisy-*`,
+`vlp16-noisy-rolling`) do not.
 Outdoor classes reuse the SemanticKITTI raw label ids; indoor ones start at
 100.
 
@@ -487,6 +492,13 @@ These MVSim builds produced the published files:
 - The `os1_64-*` variants were rendered on 2026-11-12 with MVSim 2.1.0
   (`develop` at 1ffefda4) plus MRPT/mvsim#182 (point labels) and #183 (IMU
   sensor pose).
+- The labels were added on 2026-11-12 and 2026-11-13 by rendering again with
+  that same build. Each `os1_32-real-*` file was replaced only if its points
+  and ground truth were identical to the released file (all 60 were). All 30
+  `os1_32-clean-rolling` files were replaced: 6 are identical, and the 24 of
+  the first release differ at the float-rounding level described below.
+  Through rays that graze an edge, that can move a single point by up to the
+  range jump, and change the point count of a few sweeps.
 
 Until MRPT/mvsim#183, the generator left the `sensorPose` of the IMU
 observations at the identity. The samples themselves were already simulated
@@ -506,25 +518,25 @@ files that were not re-rendered were lost, and are not in the manifest.
 
 
 <!-- BEGIN gentime -->
-Generation speed (simulated seconds per wall-clock second, 8 cores per job, Xeon E5-2696 v4 at 2.2 GHz, on a shared machine), per world and variant:
+Generation speed (simulated seconds per wall-clock second; cores per job in each column, Xeon E5-2696 v4 at 2.2 GHz, on a shared machine), per world and variant:
 
-| world | os1_32-clean-global | os1_32-clean-rolling | os1_32-noisy-global | os1_32-noisy-rolling | os1_32-real-global | os1_32-real-rolling | vlp16-noisy-rolling |
+| world | os1_32-clean-global (8 cores) | os1_32-clean-rolling (4 cores) | os1_32-noisy-global (8 cores) | os1_32-noisy-rolling (8 cores) | os1_32-real-global (4 cores) | os1_32-real-rolling (4 cores) | vlp16-noisy-rolling (8 cores) |
 |---|---|---|---|---|---|---|---|
-| apartment_building | 3.6x | 3.1x | 3.1x | 3.0x | 2.5x | 2.3x | 3.2x |
-| campus | 4.7x | 4.7x | 4.7x | 4.5x | 4.2x | 3.9x | 4.4x |
-| forest | 2.8x | 2.8x | 2.8x | 2.8x | 2.5x | 2.6x | 2.8x |
-| greenhouse | 2.9x | 2.9x | 2.5x | 2.4x | 2.1x | 2.4x | 2.7x |
-| office | 3.6x | 3.5x | 2.5x | 2.6x | 2.5x | 2.8x | 2.8x |
-| open_field | 6.2x | 6.1x | 5.8x | 5.8x | 5.7x | 5.7x | 5.8x |
-| orchard | 3.7x | 3.6x | 3.6x | 3.6x | 3.1x | 3.0x | 3.7x |
-| parking_garage | 3.5x | 3.5x | 3.0x | 3.0x | 2.9x | 2.5x | 3.2x |
-| parking_lot | 6.7x | 6.6x | 3.9x | 3.9x | 4.6x | 4.2x | 4.4x |
-| rough_terrain | 4.9x | 4.9x | 4.8x | 4.9x | 4.9x | 4.4x | 4.7x |
-| stair_course | 3.4x | 3.2x | 3.2x | 3.2x | 2.7x | 2.6x | 3.4x |
-| stairwell | 3.1x | 3.1x | 2.9x | 2.9x | 2.6x | 2.4x | 3.1x |
-| tunnel | 5.1x | 5.1x | 3.1x | 3.1x | 2.8x | 2.7x | 3.3x |
-| urban_street | 3.8x | 3.7x | 3.1x | 3.1x | 2.7x | 2.4x | 3.2x |
-| warehouse | 2.6x | 2.6x | 2.3x | 2.3x | 1.7x | 1.2x | 2.5x |
+| apartment_building | 3.6x | 2.1x | 3.1x | 3.0x | 1.7x | 1.5x | 3.2x |
+| campus | 4.7x | 3.4x | 4.7x | 4.5x | 3.2x | 2.6x | 4.4x |
+| forest | 2.8x | 2.2x | 2.8x | 2.8x | 2.0x | 1.8x | 2.8x |
+| greenhouse | 2.9x | 1.9x | 2.5x | 2.4x | 1.5x | 1.4x | 2.7x |
+| office | 3.6x | 2.7x | 2.5x | 2.6x | 2.0x | 1.8x | 2.8x |
+| open_field | 6.2x | 4.0x | 5.8x | 5.8x | 4.6x | 4.2x | 5.8x |
+| orchard | 3.7x | 2.5x | 3.6x | 3.6x | 2.2x | 2.3x | 3.7x |
+| parking_garage | 3.5x | 2.2x | 3.0x | 3.0x | 1.8x | 2.1x | 3.2x |
+| parking_lot | 6.7x | 4.6x | 3.9x | 3.9x | 2.8x | 3.6x | 4.4x |
+| rough_terrain | 4.9x | 3.5x | 4.8x | 4.9x | 3.1x | 3.4x | 4.7x |
+| stair_course | 3.4x | 2.3x | 3.2x | 3.2x | 2.0x | 2.1x | 3.4x |
+| stairwell | 3.1x | 2.1x | 2.9x | 2.9x | 1.8x | 1.8x | 3.1x |
+| tunnel | 5.1x | 3.5x | 3.1x | 3.1x | 2.0x | 2.2x | 3.3x |
+| urban_street | 3.8x | 2.6x | 3.1x | 3.1x | 2.0x | 2.1x | 3.2x |
+| warehouse | 2.6x | 1.4x | 2.3x | 2.3x | 1.1x | 1.1x | 2.5x |
 <!-- END gentime -->
 
 ## Validation with MOLA LiDAR odometry
@@ -614,22 +626,22 @@ their sizes and SHA-256 checksums is in [MANIFEST.tsv](MANIFEST.tsv) and
 <!-- BEGIN manifest -->
 | world | rawlogs | files | size |
 |---|---|---|---|
-| apartment_building | 14 | 76 | 14.3 GB |
-| campus | 14 | 66 | 17.3 GB |
-| forest | 14 | 66 | 10.0 GB |
-| greenhouse | 14 | 66 | 13.5 GB |
-| office | 14 | 66 | 8.0 GB |
-| open_field | 14 | 66 | 7.2 GB |
-| orchard | 14 | 66 | 12.4 GB |
-| parking_garage | 14 | 66 | 7.4 GB |
-| parking_lot | 14 | 66 | 6.2 GB |
-| rough_terrain | 14 | 66 | 6.6 GB |
-| stair_course | 7 | 38 | 3.4 GB |
-| stairwell | 21 | 113 | 14.9 GB |
-| tunnel | 14 | 66 | 8.4 GB |
-| urban_street | 14 | 66 | 14.8 GB |
-| warehouse | 14 | 66 | 8.8 GB |
-| **total** | 210 | 1019 | **153.1 GB** |
+| apartment_building | 18 | 98 | 24.4 GB |
+| campus | 18 | 90 | 29.1 GB |
+| forest | 18 | 90 | 17.2 GB |
+| greenhouse | 18 | 90 | 23.7 GB |
+| office | 18 | 90 | 14.0 GB |
+| open_field | 18 | 90 | 12.0 GB |
+| orchard | 18 | 90 | 21.2 GB |
+| parking_garage | 18 | 90 | 12.8 GB |
+| parking_lot | 18 | 90 | 11.1 GB |
+| rough_terrain | 18 | 90 | 11.0 GB |
+| stair_course | 9 | 49 | 5.9 GB |
+| stairwell | 27 | 146 | 25.5 GB |
+| tunnel | 18 | 90 | 15.2 GB |
+| urban_street | 18 | 90 | 25.7 GB |
+| warehouse | 18 | 90 | 15.6 GB |
+| **total** | 270 | 1373 | **264.5 GB** |
 <!-- END manifest -->
 
 ## Download
