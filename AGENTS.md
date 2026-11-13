@@ -110,10 +110,12 @@ when lists are concatenated with `[1:]`.
 The planar `odom` stream (CObservationOdometry) is derived from the ground
 truth for every carrier; it is meaningless for legged, dog and handheld
 sequences, and its label collides with MOLA's own `odom` frame in the
-smoother (fixed in mola_state_estimation#102). validate_mola.py uses the
-simple estimator and is unaffected. With the smoother, exclude it on non-wheeled
-carriers (`do_process_odometry_labels_re: "^$"`): fused, it bends the estimate
-(forest trail_loop global shutter 388 vs 102 mm).
+smoother (fixed in mola_state_estimation#102). Both MOLA estimators fuse it by
+default (`do_process_odometry_labels_re` is `.*`), including the simple one that
+validate_mola.py runs, so its table is not LiDAR-only (tunnels depend on it).
+Exclude it (`"^$"`) on non-wheeled carriers and for LiDAR(-inertial)
+comparisons: fused, it bends the estimate (forest trail_loop global shutter
+388 vs 102 mm with the smoother).
 
 ## Gotchas found
 

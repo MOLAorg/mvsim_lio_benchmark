@@ -290,9 +290,11 @@ are rendered in the published data; the others are defined for
   every carrier, including the handheld, legged and dog ones, where it is not
   physically meaningful: do not use it for those sequences. It is the
   horizontal projection of the path, so on slopes and stairs it also disagrees
-  with any body-frame motion estimate. MOLA's state-estimation smoother fuses
-  every odometry label by default: for these carriers, set
-  `do_process_odometry_labels_re: "^$"` in its YAML.
+  with any body-frame motion estimate. Both MOLA state estimators (the simple
+  one that `mola-lo-cli-rawlog` uses by default, and the smoother) fuse every
+  odometry label by default: set `do_process_odometry_labels_re: "^$"` in
+  their YAML for these carriers, and whenever a LiDAR-only or LiDAR-inertial
+  method is evaluated.
 - **Intensity**: not generated (MVSim has no material model).
 
 ### Frames and extrinsics
@@ -544,7 +546,9 @@ Generation speed (simulated seconds per wall-clock second; cores per job in each
 As a sanity check of data, timestamps, extrinsics and ground truth, and as a
 first difficulty ranking, every sequence was run through MOLA LiDAR odometry
 (`mola-lo-cli-rawlog`, default `lidar3d-default` pipeline, no loop closure).
-Metrics are for the translation of `base_link`, with the ground truth
+Its default state estimator also fuses the `odom` stream, so these are not
+LiDAR-only results; the stream matters mostly where the scans do not
+constrain the motion along the path (tunnels). Metrics are for the translation of `base_link`, with the ground truth
 interpolated at the estimate timestamps: APE RMSE after SE(3) alignment, and
 end-point drift (aligning only the first pose) as a percentage of the
 distance traveled.
