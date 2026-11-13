@@ -1,12 +1,13 @@
 <!--
-  mvsim_lio_benchmark sensor rig "os1_64_car": Ouster OS1-64 style on a car roof (1.8 m): 64 rings over 42.4 deg, 1024 columns, 10 Hz, 0.5-120 m, plus a 200 Hz IMU.
+  mvsim_lio_benchmark sensor rig "os1_64_car": Ouster OS1-64 style on a car roof (1.8 m above the road on the car carrier): 64 rings over 42.4 deg, 1024 columns, 10 Hz, 0.5-120 m, plus a 200 Hz IMU.
   Pinned sensor parameters: this file does
   not include MVSim's definitions/*.xml, so upstream changes there do not
   alter the benchmark.
 
   Frames (all rotations are identity):
     base_link  the pose given by the trajectory and the *.gt.tum files
-    lidar1     (0, 0, 1.8) m in base_link
+    lidar1     (0, 0, 0.65) m in base_link: 1.8 m above the road on the car
+               carrier, whose base_link is 1.15 m above the road
     imu1       (0.05, -0.03, 0.45) m in base_link
   mvsim-dataset-gen never steps physics: the dynamics block below is only
   required by the XML schema.
@@ -24,8 +25,8 @@
 <vehicle name="r1" class="lio_rig">
 	<init_pose>0 0 0</init_pose>
 	<sensor class="lidar3d" name="lidar1">
-		<!-- Ouster OS1-64 style on a car roof (1.8 m): 64 rings over 42.4 deg, 1024 columns, 10 Hz, 0.5-120 m -->
-		<pose_3d>0.0 0.0 1.8 0.0 0.0 0.0</pose_3d>
+		<!-- Ouster OS1-64 style on a car roof (1.8 m above the road on the car carrier): 64 rings over 42.4 deg, 1024 columns, 10 Hz, 0.5-120 m -->
+		<pose_3d>0.0 0.0 0.65 0.0 0.0 0.0</pose_3d>
 		<vert_nrays>64</vert_nrays>
 		<vert_fov_degrees>42.4</vert_fov_degrees>
 		<horz_nrays>1024</horz_nrays>
