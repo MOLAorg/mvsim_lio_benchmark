@@ -100,26 +100,29 @@ class World:
             self.classes[key] = f'c{len(self.classes):04d}'
         return self.classes[key]
 
-    def _block(self, geom_xml, pose, color, zmin):
+    def _block(self, geom_xml, pose, color, zmin, name=None):
         cls = self._class(geom_xml, color)
         x, y, z, yaw, pitch, roll = pose
         self.block_zmin.append(zmin)
+        tag = f'<block name="{name}" class="{cls}">' if name else f'<block class="{cls}">'
         self.blocks.append(
-            f'<block class="{cls}"><init_pose3d>{_n(x)} {_n(y)} {_n(z)} '
+            f'{tag}<init_pose3d>{_n(x)} {_n(y)} {_n(z)} '
             f'{_n(math.degrees(yaw), 2)} {_n(math.degrees(pitch), 2)} {_n(math.degrees(roll), 2)}'
             f'</init_pose3d>{self._tags()}</block>\n')
         self.n_prims += 1
 
     # ------------------------------------------------------------------
-    def box(self, cx, cy, z0, lx, ly, lz, yaw=0.0, color='#a0a0a0', drivable=False, plot=True):
+    def box(self, cx, cy, z0, lx, ly, lz, yaw=0.0, color='#a0a0a0', drivable=False, plot=True,
+            name=None):
         """Box centered at (cx, cy) in XY, from z0 to z0+lz, rotated `yaw` rad.
-        MVSim's box origin is its corner, so it is shifted here."""
+        MVSim's box origin is its corner, so it is shifted here. name: block
+        name, for blocks that a sequence moves (see traffic.py)."""
         lx, ly, lz = _d(lx), _d(ly), _d(lz)
         c, s = math.cos(yaw), math.sin(yaw)
         ox = cx - (c * lx / 2 - s * ly / 2)
         oy = cy - (s * lx / 2 + c * ly / 2)
         geom = f'<geometry type="box" lx="{lx}" ly="{ly}" lz="{lz}" />'
-        self._block(geom, (ox, oy, z0, yaw, 0.0, 0.0), color, z0)
+        self._block(geom, (ox, oy, z0, yaw, 0.0, 0.0), color, z0, name)
         corners = [(cx + c * dx - s * dy, cy + s * dx + c * dy)
                    for dx, dy in ((-lx / 2, -ly / 2), (lx / 2, -ly / 2), (lx / 2, ly / 2),
                                   (-lx / 2, ly / 2))]

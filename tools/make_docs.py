@@ -4,7 +4,8 @@
   worlds/<name>/README.md          per-world description and trajectory table
   README.md                        the tables between <!-- BEGIN x --> / <!-- END x -->
                                    markers (worlds, sequences, gallery, manifest,
-                                   validation)
+                                   validation; worlds whose world.py has
+                                   HOSTED = False go to the extra_worlds table only)
   MANIFEST.tsv, SHA256SUMS         every generated file: size and sha256
                                    (only with --manifest; hashing takes a while)
 
@@ -46,7 +47,7 @@ def describe(name):
     desc = rest or doc
     desc = desc[:1].upper() + desc[1:]
     return dict(name=name, doc=desc, size=f'{x1 - x0:.0f} x {y1 - y0:.0f} m',
-                prims=w.n_prims, stats=stats, mod=mod)
+                prims=w.n_prims, stats=stats, mod=mod, hosted=getattr(mod, 'HOSTED', True))
 
 
 def fmt_dur(s):
@@ -58,6 +59,11 @@ def world_readme(d):
     shots = sorted((ROOT / 'worlds' / name).glob('screenshot*.png'))
     lines = [f'# {name}', '', d['doc'], '',
              f'Extent of the plotted area: {d["size"]}; {d["prims"]} ray-traced primitives.', '']
+    if not d['hosted']:
+        lines += ['The data of this world is not part of the hosted set: render it with the commands below.', '']
+    if hasattr(d['mod'], 'moving_blocks'):
+        lines += ['Sequences of this world have moving vehicles (`tools/mvsim_lio/traffic.py`): rendering needs '
+                  'an MVSim whose `mvsim-dataset-gen` has `--moving-block`.', '']
     for s in shots:
         lines.append(f'![{name} {s.stem}]({s.name})')
     lines += ['', '![trajectories](trajectories.png)', '',
@@ -156,8 +162,19 @@ def main():
     descs = [describe(n) for n in world_names()]
     for d in descs:
         world_readme(d)
+    # Worlds outside the hosted set get a table of their own and stay out of
+    # the tables and totals of the data.
+    extra = [d for d in descs if not d['hosted']]
+    descs = [d for d in descs if d['hosted']]
 
     readme = (ROOT / 'README.md').read_text()
+    rows = ['| world | geometry and what it stresses | size | trajectories (carrier, duration) |',
+            '|---|---|---|---|']
+    for d in extra:
+        tr = '<br>'.join(f'`{t}` ({s["platform"]}, {fmt_dur(s["duration"])}, {s["length"]:.0f} m)'
+                         for t, s in d['stats'].items())
+        rows.append(f'| [{d["name"]}](worlds/{d["name"]}/README.md) | {d["doc"]} | {d["size"]} | {tr} |')
+    readme = replace_block(readme, 'extra_worlds', '\n'.join(rows))
     # Worlds table
     rows = ['| world | geometry and what it stresses | size | trajectories (carrier, duration) |',
             '|---|---|---|---|']

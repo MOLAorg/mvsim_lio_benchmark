@@ -17,6 +17,7 @@ Usage: tools/generate.py [--jobs 5] [--cores-per-job 8] [--first-core 0]
                          [--labels]
 """
 import argparse
+import importlib.util
 import json
 import os
 import random
@@ -32,7 +33,7 @@ from queue import Queue
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'tools'))
 
-from mvsim_lio import densify  # noqa: E402
+from mvsim_lio import densify, traffic  # noqa: E402
 from mvsim_lio.labels import OUTLIER  # noqa: E402
 
 # Default variant set: all six (noise x shutter) combinations for the main
@@ -41,6 +42,10 @@ from mvsim_lio.labels import OUTLIER  # noqa: E402
 VARIANTS = ['os1_32-clean-global', 'os1_32-clean-rolling', 'os1_32-noisy-global',
             'os1_32-noisy-rolling', 'os1_32-real-global', 'os1_32-real-rolling',
             'vlp16-noisy-rolling', 'os1_64-noisy-rolling', 'os1_64-real-rolling']
+
+
+# The generator: the one in PATH, or another build (MVSIM_LIO_DATASET_GEN).
+GEN = os.environ.get('MVSIM_LIO_DATASET_GEN', 'mvsim-dataset-gen')
 
 
 def seed_for(world, traj):
@@ -85,6 +90,31 @@ def list_sequences(worlds):
     return out
 
 
+_WORLD_MODULES = {}
+
+
+def world_module(world):
+    if world not in _WORLD_MODULES:
+        spec = importlib.util.spec_from_file_location(f'world_{world}', ROOT / 'worlds' / world / 'world.py')
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _WORLD_MODULES[world] = mod
+    return _WORLD_MODULES[world]
+
+
+def moving_block_args(world, traj, work_dir):
+    """--moving-block arguments of a sequence: the trajectories of the blocks
+    that move in it (traffic), if its world.py defines moving_blocks()."""
+    fn = getattr(world_module(world), 'moving_blocks', None)
+    if fn is None:
+        return []
+    t, p, _ = densify.load_tum(ROOT / 'worlds' / world / 'trajectories' / f'{traj}.tum')
+    tracks = fn(traj, t, p[:, 0])
+    if not tracks:
+        return []
+    return traffic.write(tracks, work_dir / world / f'{traj}.traffic')
+
+
 def run_one(world, traj, variant, out_dir, work_dir, cores, force, labels=False):
     rig, noise, shutter = variant.split('-')
     odir = out_dir / world / traj
@@ -99,7 +129,7 @@ def run_one(world, traj, variant, out_dir, work_dir, cores, force, labels=False)
     if complete and not force:
         return f'{world}/{traj}/{variant}: exists, skipped'
     dense = work_dir / world / f'{traj}.dense.tum'
-    cmd = ['taskset', '-c', cores, 'mvsim-dataset-gen', str(ROOT / 'worlds' / world / 'world.xml'),
+    cmd = ['taskset', '-c', cores, GEN, str(ROOT / 'worlds' / world / 'world.xml'),
            '--trajectory', str(dense), '--trajectory-format', 'tum', '-o', str(rawlog),
            '--seed', str(seed_for(world, traj)), '--shutter', shutter]
     if noise == 'clean':
@@ -107,6 +137,7 @@ def run_one(world, traj, variant, out_dir, work_dir, cores, force, labels=False)
     if labels:
         # Per-point semantic and instance labels; mixed returns are outliers.
         cmd += ['--labels', '--mixed-return-label', str(OUTLIER)]
+    cmd += moving_block_args(world, traj, work_dir)
     env = dict(os.environ, MVSIM_LIO_RIG=str(ROOT / 'rigs' / f'{rig}.rig.xml'),
                TBB_NUM_THREADS=str(len(expand(cores))))
     if noise == 'real':
@@ -152,10 +183,13 @@ def main():
                     help='store the per-point "label" and "instance" fields (tools/mvsim_lio/labels.py)')
     a = ap.parse_args()
 
-    if not shutil.which('mvsim-dataset-gen'):
-        sys.exit('mvsim-dataset-gen not in PATH')
-    worlds = a.worlds.split(',') if a.worlds else sorted(
-        p.parent.name for p in (ROOT / 'worlds').glob('*/world.xml'))
+    if not shutil.which(GEN):
+        sys.exit(f'{GEN} not found')
+    # Without --worlds: the worlds of the hosted set (a world.py with
+    # HOSTED = False is rendered only when named).
+    worlds = a.worlds.split(',') if a.worlds else [
+        w for w in sorted(p.parent.name for p in (ROOT / 'worlds').glob('*/world.xml'))
+        if getattr(world_module(w), 'HOSTED', True)]
     seqs = list_sequences(worlds)
     if a.trajs:
         seqs = [s for s in seqs if s[1] in a.trajs.split(',')]

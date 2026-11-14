@@ -1,0 +1,41 @@
+{
+ "drive_fast": {
+  "duration": 148.3,
+  "length": 1819.163,
+  "vmax": 14.003,
+  "vmean": 12.267,
+  "yawrate_max_deg": 16.421,
+  "pitch_max_deg": 1.127,
+  "roll_max_deg": 0.895,
+  "z_range": 2.868,
+  "platform": "car",
+  "description": "Car along the road at 14 m/s, gentle S bend",
+  "min_clearance_m": 1.549
+ },
+ "drive_slow": {
+  "duration": 214.085,
+  "length": 1818.6,
+  "vmax": 9.002,
+  "vmean": 8.495,
+  "yawrate_max_deg": 15.985,
+  "pitch_max_deg": 1.136,
+  "roll_max_deg": 0.895,
+  "z_range": 2.862,
+  "platform": "car",
+  "description": "Same road at 9 m/s",
+  "min_clearance_m": 0.618
+ },
+ "drive_empty": {
+  "duration": 148.3,
+  "length": 1819.163,
+  "vmax": 14.003,
+  "vmean": 12.267,
+  "yawrate_max_deg": 16.421,
+  "pitch_max_deg": 1.127,
+  "roll_max_deg": 0.895,
+  "z_range": 2.868,
+  "platform": "car",
+  "description": "Car along the road at 14 m/s, no other vehicle",
+  "min_clearance_m": 1.549
+ }
+}

@@ -89,6 +89,27 @@ Per variant:
 | [warehouse](worlds/warehouse/README.md) | A 90 x 60 m logistics hall, 10 m high with a ceiling and roof trusses, six double rows of 8 m pallet racks (5 levels, randomly filled) separated by 3.6 m aisles, loading docks with door openings, staging areas with pallets and an office cabin. Indoor and repetitive: the aisles look alike, with long, nearly identical views along them. | 110 x 80 m | `aisles` (ugv, 3:38, 410 m)<br>`walk` (handheld, 3:20, 260 m) |
 <!-- END worlds -->
 
+### Road worlds with moving traffic (definitions only)
+
+Two more worlds are defined in this repository but their data is not part of
+the hosted set, and they are left out of the tables and totals below. They
+are roads driven at 9-25 m/s where little or nothing constrains the motion
+along the road, with other vehicles that move: vehicles ahead of and behind
+the car that stop and start with it, queues or faster and slower streams in
+the lanes beside it, and oncoming vehicles (`tools/mvsim_lio/traffic.py`).
+A vehicle that keeps its place near the sensor makes LiDAR-only odometry
+under-estimate the distance traveled, or stall. Render them with
+`tools/generate.py --worlds open_highway,open_road` (any variant); this needs
+an MVSim whose `mvsim-dataset-gen` has `--moving-block` (MRPT/mvsim#184).
+The car rigs `hdl64` and `os1_64_car` have the LiDAR at 1.7 to 1.8 m above the road.
+
+<!-- BEGIN extra_worlds -->
+| world | geometry and what it stresses | size | trajectories (carrier, duration) |
+|---|---|---|---|
+| [open_highway](worlds/open_highway/README.md) | 7 km of divided highway at 14-25 m/s. Ordinary stretches (median barrier, reflector posts, lamp posts, sign gantries, overpasses, trees, buildings, gentle bends) alternate with stretches whose only geometry is invariant along the road, as on a long bridge or between noise walls: flat deck, continuous barriers or walls, nothing else in range. Along-track motion is unobservable there and LiDAR odometry under-estimates the distance traveled. The first 4.2 km are for training trajectories; the last 2.6 km, with other kinds of invariant stretch, for a held-out one. Every trajectory but one has moving traffic: vehicles ahead of and behind the car that stop and start with it, the two lanes beside it as queues or as faster and slower streams, and oncoming vehicles on the other carriageway. A vehicle that keeps its place near the car stalls LiDAR odometry that has no other motion source, in the ordinary stretches too. | 7120 x 260 m | `cruise_25` (car_highway, 3:20, 4210 m)<br>`varied_18` (car_highway, 4:13, 4210 m)<br>`jam_14` (car_highway, 6:25, 4210 m)<br>`empty_14` (car_highway, 3:34, 1805 m)<br>`bridge_start_20` (car_highway, 2:58, 3177 m)<br>`walls_start_14` (car_highway, 2:03, 1503 m)<br>`heldout_21` (car_highway, 2:29, 2608 m)<br>`heldout_start_17` (car_highway, 1:58, 1705 m) |
+| [open_road](worlds/open_road/README.md) | A 1.8 km two-lane road through open farmland at 9-14 m/s, with little beside it: reflector posts every 30 m, utility poles, two guardrail stretches, and lone trees, sheds, hedges and billboards far apart. The ground constrains z, roll and pitch, but along-track motion rests on a handful of posts and distant objects: the weak along-track constraint of real open roads. A farmyard at the start gives the first 100 m more structure. Sparse moving traffic, except in one sequence: a vehicle ahead and behind in the car's lane and oncoming vehicles. | 1920 x 280 m | `drive_fast` (car, 2:28, 1819 m)<br>`drive_slow` (car, 3:34, 1819 m)<br>`drive_empty` (car, 2:28, 1819 m) |
+<!-- END extra_worlds -->
+
 Screenshots are rendered by MVSim itself (`tools/screenshot.py`); indoor
 worlds are shown as cutaways without their roofs or ceilings, which the
 datasets do have. The plots show the top view of every primitive and the

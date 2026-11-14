@@ -88,6 +88,23 @@ queue a regeneration that was then cancelled), and are not in the manifest.
   scanned the whole matrix per ray, about 100x slower than real time on a
   400 x 400 grid. Output is unchanged (checked bit for bit).
 
+## Road worlds and moving traffic
+
+`open_highway` and `open_road` have `HOSTED = False` in their `world.py`:
+`generate.py` renders them only when named with `--worlds`, and
+`make_docs.py` lists them in the README's `extra_worlds` table and keeps them
+out of the tables and totals of the hosted data. Their vehicles
+(`tools/mvsim_lio/traffic.py`) are named blocks parked 40 m below the
+terrain; a world with a `moving_blocks(traj, t, x)` function gets one
+trajectory per block from `generate.py` (`--moving-block`, MRPT/mvsim#184,
+in `develop` since 2026-11-14), derived from the car's own along-road
+profile, so traffic stops and starts with it. `MVSIM_LIO_DATASET_GEN`
+selects a generator other than the one in PATH. `open_highway` registers its
+own carrier (`car_highway`, 30 m/s limit) in its `world.py`. The car rigs
+`hdl64` and `os1_64_car` have the LiDAR at its height above the road on the
+`car` carrier (`base_link` is 1.15 m above the ground): no hosted variant
+uses them.
+
 ## Carriers and stairs
 
 `traj.PLATFORMS` defines the carriers (`car`, `ugv`, `legged`, `handheld`,
