@@ -564,8 +564,7 @@ Generation speed (simulated seconds per wall-clock second; cores per job in each
 
 ## Validation with MOLA LiDAR odometry
 
-As a sanity check of data, timestamps, extrinsics and ground truth, and as a
-first difficulty ranking, every sequence was run through MOLA LiDAR odometry
+As a sanity check of data, timestamps, extrinsics and ground truth, every sequence was run through MOLA LiDAR odometry
 (`mola-lo-cli-rawlog`, default `lidar3d-default` pipeline, no loop closure).
 Its default state estimator also fuses the `odom` stream, so these are not
 LiDAR-only results; the stream matters mostly where the scans do not
@@ -634,13 +633,20 @@ Reading the table:
   vertically on flat ground), which is what LiDAR-inertial methods have to
   cope with.
 
-First difficulty ranking (noisy rolling shutter, end-point drift):
+### Difficulty classes
 
-| class | sequences |
-|---|---|
-| easy (< 0.1%) | `apartment_building/*`, `stair_course/*`, `office/*`, `greenhouse/*`, `stairwell/*`, `warehouse/aisles`, `parking_garage/up_down`, `parking_lot/*`, `orchard/rows` |
-| moderate (0.1% to 1.2%) | `urban_street/*`, `parking_garage/walk_down`, `warehouse/walk`, `tunnel/car_through`, `rough_terrain/*`, `forest/crossing`, `orchard/headland` |
-| hard (> 1.5%) | `campus/*`, `forest/trail_loop`, `tunnel/ugv_inspection`, `open_field/*` |
+Each sequence is scored by the median, over seven LiDAR and LiDAR-inertial odometry methods with their default settings (MOLA-LO, MOLA-LIO,
+KISS-ICP, DLIO, FAST-LIO2, GLIM, EllipseLIO; no loop closure, no wheel odometry), of
+the APE as a percentage of the path length on `os1_32-clean-global`, where only the
+scene and the motion make a sequence hard (a failed run counts as 10 %). The 30
+sequences are split into tertiles. This replaces a first ranking made with the run
+above alone.
+
+| class | score | sequences |
+|---|---|---|
+| easy | 0.0023 to 0.0267 % | `urban_street/pedestrian`, `urban_street/car_loops`, `greenhouse/walk`, `parking_lot/search`, `warehouse/walk`, `greenhouse/aisles`, `orchard/rows`, `warehouse/aisles`, `parking_lot/ugv_loop`, `parking_garage/up_down` |
+| moderate | 0.0296 to 0.104 % | `forest/crossing`, `forest/trail_loop`, `office/walk`, `stair_course/dog_course`, `parking_garage/walk_down`, `office/spins`, `stairwell/legged_floors`, `orchard/headland`, `apartment_building/dog_floors`, `stairwell/handheld_stairs` |
+| hard | 0.128 to 10 % | `apartment_building/dog_stairs`, `stairwell/dog_floors`, `rough_terrain/hill_loop`, `rough_terrain/traverse_fast`, `campus/long_tour`, `campus/ring_drive`, `open_field/zigzag`, `open_field/lap`, `tunnel/car_through`, `tunnel/ugv_inspection` |
 
 ## Dataset manifest
 
