@@ -29,6 +29,13 @@ def plot_world(world, trajs, out_png, max_kb=300):
                        dx=tz.res, dy=tz.res, vmin=tz.Z.min() - 0.3 * np.ptp(tz.Z) - 1,
                        vmax=tz.Z.max() + 0.6 * np.ptp(tz.Z) + 1)
         ax.imshow(rgb, origin='lower', extent=(tz.xmin, tz.xmax, tz.ymin, tz.ymax), zorder=0)
+        tex = tz.texture()
+        if tex is not None:
+            # The painted ground (roads) over the shaded terrain.
+            base = np.array([int(tz.color[i:i + 2], 16) for i in (1, 3, 5)], dtype=np.uint8)
+            rgba = np.dstack([tex, 255 * np.any(tex != base, axis=2).astype(np.uint8)])
+            ax.imshow(rgba.transpose(1, 0, 2), origin='lower', extent=(tz.xmin, tz.xmax, tz.ymin, tz.ymax),
+                      zorder=0, interpolation='antialiased')
         cs = ax.contour(np.linspace(tz.xmin, tz.xmax, tz.nx), np.linspace(tz.ymin, tz.ymax, tz.ny),
                         tz.Z.T, levels=12, colors='k', linewidths=0.3, alpha=0.4, zorder=1)
         ax.clabel(cs, fontsize=6, fmt='%.0f m')

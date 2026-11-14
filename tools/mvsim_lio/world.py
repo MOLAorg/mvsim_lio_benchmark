@@ -266,13 +266,41 @@ class World:
         return ''.join(out)
 
 
+C_ASPHALT = (58, 61, 66)
+C_MARKING = (225, 225, 215)
+
+
+def paint_road(rgb, x, d, lo, hi, solid=(), dashed=(), line=0.3, dash=(4.0, 8.0)):
+    """Paints a road in a ground texture (Terrain's paint): asphalt where the
+    lateral offset d of a pixel from the road axis is within [lo, hi], solid
+    lines at the offsets `solid` and dashed ones at `dashed` (dash[0] m of
+    line, dash[1] m of gap along x)."""
+    rgb[(d >= lo) & (d <= hi)] = C_ASPHALT
+    for off in solid:
+        rgb[np.abs(d - off) <= line / 2] = C_MARKING
+    on = np.mod(x, dash[0] + dash[1]) < dash[0]
+    for off in dashed:
+        rgb[(np.abs(d - off) <= line / 2) & on] = C_MARKING
+
+
+# The painted ground of a world (Terrain.texture()), next to its world.xml.
+TEXTURE_FILE = 'terrain.png'
+
+
 class Terrain:
     """Elevation map sampled from an analytic, smooth z = f(x, y) function, so
     that trajectories can follow it exactly (no grid kinks under the wheels).
     Matrix rows run along X and columns along Y, as MVSim expects."""
 
-    def __init__(self, f, xmin, xmax, ymin, ymax, resolution, color='#90a878'):
+    def __init__(self, f, xmin, xmax, ymin, ymax, resolution, color='#90a878', paint=None,
+                 paint_res=(1.0, 0.25)):
+        """paint: optional paint(X, Y, rgb) that colors the ground (a road,
+        its markings) in the texture `rgb` (uint8, pre-filled with `color`),
+        whose pixels are centered at X, Y and measure paint_res = (along x,
+        along y) m. Rendering only: the ray tracer sees the heights alone."""
         self.f = f
+        self.paint = paint
+        self.paint_res = paint_res
         self.res = resolution
         self.nx = int(round((xmax - xmin) / resolution)) + 1
         self.ny = int(round((ymax - ymin) / resolution)) + 1
@@ -289,11 +317,27 @@ class Terrain:
     def height(self, x, y):
         return self.f(np.asarray(x, dtype=float), np.asarray(y, dtype=float))
 
+    def texture(self):
+        """The painted ground as an RGB image (rows along X, columns along
+        Y, the layout MVSim maps onto the mesh), or None without paint."""
+        if self.paint is None:
+            return None
+        rx, ry = self.paint_res
+        nx = int(round((self.xmax - self.xmin) / rx))
+        ny = int(round((self.ymax - self.ymin) / ry))
+        X, Y = np.meshgrid(self.xmin + rx * (np.arange(nx) + 0.5), self.ymin + ry * (np.arange(ny) + 0.5),
+                           indexing='ij')
+        rgb = np.empty((nx, ny, 3), dtype=np.uint8)
+        rgb[:] = [int(self.color[i:i + 2], 16) for i in (1, 3, 5)]
+        self.paint(X, Y, rgb)
+        return rgb
+
     def to_xml(self):
         rows = ';\n'.join(' '.join(f'{v:.3f}' for v in row) for row in self.Z)
+        tex = f'\n\t\t<texture_image>{TEXTURE_FILE}</texture_image>' if self.paint is not None else ''
         return (f'\t<element class="elevation_map">\n\t\t<resolution>{self.res}</resolution>\n'
                 f'\t\t<corner_min_x>{self.xmin}</corner_min_x>\n'
                 f'\t\t<corner_min_y>{self.ymin}</corner_min_y>\n'
-                f'\t\t<mesh_color>{self.color}</mesh_color>{self.tags}\n'
+                f'\t\t<mesh_color>{self.color}</mesh_color>{self.tags}{tex}\n'
                 f'\t\t<elevation_data_matrix>[\n{rows}\n]</elevation_data_matrix>\n'
                 f'\t</element>\n')

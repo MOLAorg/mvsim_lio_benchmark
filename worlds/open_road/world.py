@@ -12,7 +12,7 @@ import numpy as np
 
 from mvsim_lio import props, traffic
 from mvsim_lio.traj import P
-from mvsim_lio.world import Terrain, World
+from mvsim_lio.world import Terrain, World, paint_road
 
 SCREENSHOTS = [
     dict(point_to=(40, -4, 1.0), distance=110, azimuth=-150, elevation=18, fov=60),
@@ -46,10 +46,16 @@ def road_y(x):
     return 35.0 * (np.sin(2.0 * np.pi * s))
 
 
+def _paint(X, Y, rgb):
+    """The road in the ground texture: two 3.7 m lanes, edge lines and a
+    dashed center line."""
+    paint_road(rgb, X, Y - road_y(X), -4.0, 4.0, solid=(-3.7, 3.7), dashed=(0.0,))
+
+
 def make_world():
     rng = np.random.default_rng(SEED)
     w = World('open_road', __doc__, extent=(X0, X1, Y0, Y1))
-    w.set_terrain(Terrain(ground, X0, X1, Y0, Y1, 2.0, color='#8fae6e'))
+    w.set_terrain(Terrain(ground, X0, X1, Y0, Y1, 2.0, color='#8fae6e', paint=_paint, paint_res=(0.5, 0.25)))
     g = lambda x, y: float(ground(x, y))  # noqa: E731
     # Reflector posts on both edges, utility poles every 70 m
     for x in np.arange(0.0, 1800.0, POST_SPACING):

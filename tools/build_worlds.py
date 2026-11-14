@@ -12,12 +12,14 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'tools'))
 
 from mvsim_lio import traj as T  # noqa: E402
 from mvsim_lio.plot import plot_world  # noqa: E402
+from mvsim_lio.world import TEXTURE_FILE  # noqa: E402
 
 # Body clearance per platform: radius [m] and height band above the ground [m].
 BODY = {'car': (0.95, 0.3, 1.6), 'ugv': (0.40, 0.1, 0.9), 'legged': (0.30, 0.1, 0.7),
@@ -92,6 +94,10 @@ def build(name):
     world = mod.make_world()
     wdir = ROOT / 'worlds' / name
     (wdir / 'world.xml').write_text(world.to_xml())
+    tex = world.terrain.texture() if world.terrain is not None else None
+    if tex is not None:
+        # Few colors: a palette PNG is small.
+        Image.fromarray(tex).quantize(colors=16, dither=Image.Dither.NONE).save(wdir / TEXTURE_FILE, optimize=True)
     tdir = wdir / 'trajectories'
     tdir.mkdir(exist_ok=True)
     trajs = mod.trajectories(world)

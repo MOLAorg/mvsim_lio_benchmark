@@ -104,6 +104,10 @@ own carrier (`car_highway`, 30 m/s limit) in its `world.py`. The car rigs
 `hdl64` and `os1_64_car` have the LiDAR at its height above the road on the
 `car` carrier (`base_link` is 1.15 m above the ground): no hosted variant
 uses them.
+A `Terrain` with a `paint` function gets a ground texture (`terrain.png`,
+written by `build_worlds.py`; `paint_road()` draws asphalt and lane lines):
+MVSim shows it in screenshots, the ray tracer ignores it (rawlogs are
+byte-identical with and without it).
 
 ## Carriers and stairs
 

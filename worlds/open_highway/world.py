@@ -19,7 +19,7 @@ import numpy as np
 from mvsim_lio import props, traffic
 from mvsim_lio import traj as T
 from mvsim_lio.traj import P, Stop
-from mvsim_lio.world import Terrain, World
+from mvsim_lio.world import Terrain, World, paint_road
 
 # Highway speeds: the stock 'car' carrier is capped at 15 m/s. The carrier is
 # registered here (with its body for the clearance check of
@@ -209,10 +209,19 @@ def _start_area(w, g, rng, x0):
     _gantry(w, g, x0 + 45.0)
 
 
+def _paint(X, Y, rgb):
+    """The two carriageways in the ground texture: the three lanes of the
+    driven one and the two of the other, with edge lines and dashed lane
+    lines; the median barrier stands between them."""
+    paint_road(rgb, X, Y - road_y(X), Y_OUT_R + 0.2, Y_OUT_L - 0.2,
+               solid=(Y_OUT_R + 0.45, Y_MED - 0.55, Y_MED + 0.55, Y_OUT_L - 1.5),
+               dashed=(LANE_Y - 1.45, LANE_Y + 1.45, 5.2))
+
+
 def make_world():
     rng = np.random.default_rng(SEED)
     w = World('open_highway', __doc__, extent=(X0, X1, Y0, Y1))
-    w.set_terrain(Terrain(ground, X0, X1, Y0, Y1, 2.0, color='#8fae6e'))
+    w.set_terrain(Terrain(ground, X0, X1, Y0, Y1, 2.0, color='#8fae6e', paint=_paint))
     g = lambda x, y: float(ground(x, y))  # noqa: E731
     for x0, x1, kind in SECTIONS:
         if kind == 'rich':
