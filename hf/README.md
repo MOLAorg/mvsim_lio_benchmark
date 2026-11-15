@@ -29,7 +29,7 @@ viewer: false
 (20.1 km, 148 minutes) of five carriers (car, UGV, legged, hand-held, quadruped dog), rendered
 as MRPT `.rawlog` datasets: a rotating 3D LiDAR with per-point timestamps, a 200 Hz IMU and
 wheel odometry, with exact ground truth. Each trajectory is rendered with nine sensor variants
-(270 sequences, 265 GB).
+(270 sequences, 266 GB).
 
 - **Exact ground truth**: the trajectory is the simulator's input (a C2 spline you can evaluate
   at any time), and the map is the world's analytic geometry. No GNSS/INS, total station or TLS
@@ -47,28 +47,12 @@ constrained (streets, campus) to degenerate (tunnel, open field, greenhouse aisl
 controlled sensor noise and motion distortion; and training data for learning-based methods,
 with ground truth free of any error.
 
-## Upload status
-
-The upload is in progress. Available now:
-
-| variant | size |
-|---|---|
-| `os1_32-clean-rolling` | 22.1 GB |
-| `os1_32-real-global` | 24.1 GB |
-| `os1_32-real-rolling` | 24.6 GB |
-| `os1_64-noisy-rolling` | 50.6 GB |
-| `os1_64-real-rolling` | 47.6 GB |
-| `gt_200hz.tum` of every sequence | 0.2 GB |
-
-Coming soon, re-rendered with per-point labels: `os1_32-clean-global`, `os1_32-noisy-global`,
-`os1_32-noisy-rolling` and `vlp16-noisy-rolling`, then `MANIFEST.tsv` and `SHA256SUMS`.
-
 ## Download
 
 With the [Hugging Face CLI](https://huggingface.co/docs/huggingface_hub/guides/cli) (`hf`):
 
 ```bash
-# Everything (265 GB):
+# Everything (266 GB):
 hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio
 
 # One variant, with the 200 Hz ground truth of every sequence:
@@ -79,8 +63,19 @@ hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio \
 hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio --include "office/spins/*"
 ```
 
-Each file's SHA-256 checksum is in `SHA256SUMS` (`sha256sum -c SHA256SUMS` in the download
-directory, once it is uploaded).
+Size of each variant (all 30 sequences):
+
+| variant | size | variant | size |
+|---|---|---|---|
+| `os1_32-clean-global` | 21.5 GB | `os1_32-real-rolling` | 24.6 GB |
+| `os1_32-clean-rolling` | 22.1 GB | `vlp16-noisy-rolling` | 24.0 GB |
+| `os1_32-noisy-global` | 25.5 GB | `os1_64-noisy-rolling` | 50.6 GB |
+| `os1_32-noisy-rolling` | 25.9 GB | `os1_64-real-rolling` | 47.6 GB |
+| `os1_32-real-global` | 24.1 GB | `gt_200hz.tum` (shared) | 0.2 GB |
+
+Each file's size and SHA-256 checksum are in `MANIFEST.tsv` and `SHA256SUMS`
+(`sha256sum -c SHA256SUMS` in the download directory; with a partial download, check only the
+lines of the files you have).
 
 ## Sequences
 

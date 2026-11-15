@@ -675,7 +675,7 @@ their sizes and SHA-256 checksums is in [MANIFEST.tsv](MANIFEST.tsv) and
 ## Download
 
 The data is on the Hugging Face Hub:
-[MOLAorg/MVSim-LIO](https://huggingface.co/datasets/MOLAorg/MVSim-LIO) (upload in progress).
+[MOLAorg/MVSim-LIO](https://huggingface.co/datasets/MOLAorg/MVSim-LIO), all variants (266 GB).
 With the `hf` CLI:
 
 ```bash
