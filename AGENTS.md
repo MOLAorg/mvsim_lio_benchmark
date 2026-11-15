@@ -37,6 +37,11 @@ generated data is NOT in git; on the machine where it was made it lives in
    `tools/make_banner.py` renders `docs/banner.{gif,mp4}` from such maps.
 6. `tools/rawlog_tools` (C++): `compare-rawlogs` (identical points of two
    renders, label histogram) and `set-imu-pose` (in-place IMU pose fix).
+7. Hosting: the data is on the Hugging Face Hub, dataset `MOLAorg/MVSim-LIO`.
+   Its card is `hf/README.md` (keep it in sync with this README; the GitHub
+   repository is not linked from it while private). `tools/hf_stage.py`
+   builds a symlink tree of the `MANIFEST.tsv` files of some variants, the
+   card and its banner, to upload with `hf upload ... --repo-type dataset`.
 
 Changing a world or trajectory invalidates its data: regenerate with
 `tools/generate.py --worlds <w> --trajs <t> --force` (a sequence whose rawlog
