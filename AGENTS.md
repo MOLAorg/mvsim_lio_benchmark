@@ -57,25 +57,19 @@ from `~/ros2_ws`. Never build the whole workspace there (other packages carry
 local experimental patches). `tools/env.sh` sources `~/ros2_ws/install`, or
 `$MVSIM_LIO_MVSIM_INSTALL` if set.
 
-Data provenance (details in the README): the first release (2026-11-04,
-13 worlds) was rendered with a pre-review worktree of the three fixes below.
-The dog sequences and nine stairwell files (`handheld_stairs`, all variants;
-`legged_floors`, the four `os1_32` variants) were rendered on 2026-11-06 with
-develop at commit 7b203a52. The review of #170 changed the trajectory
-interpolation to times relative to the first knot, so upstream renders of
-first-release sequences differ at the float-rounding level (LiDAR points,
-and the last printed digit of a few GT quaternions). The `os1_32-real-*`
-variants were rendered on 2026-11-11 with develop at 5c7e3a86; the `os1_64-*`
-ones on 2026-11-12 with 2.1.0 plus #182 and #183. On 2026-11-12 the `imu1`
-observations of all `os1_32`/`vlp16` files were patched in place with their
-mounting `sensorPose` (#183: the generator left it at identity; samples
-unchanged). Labels (2026-11-12/13, same build as `os1_64`): the
-`os1_32-real-*` files were replaced only where identical (all 60), and all of
-`os1_32-clean-rolling` was replaced (24 first-release files differ at the
-float-rounding level); the other `os1_32` and the `vlp16` variants carry no
-labels. Do not regenerate first-release sequences without the owner's
-approval. Their generator logs were lost on 2026-11-06 (deleted to
-queue a regeneration that was then cancelled), and are not in the manifest.
+Data provenance (details in the README): every published file is a render
+of MVSim 2.1.0 (develop at 1ffefda4) plus #182 and #183, with labels;
+`tools/generate.py` with that build reproduces them byte for byte. Earlier
+builds: the first release (2026-11-04, 13 worlds), a pre-review worktree of
+the three fixes below; the dog and nine stairwell files (2026-11-06), develop
+at 7b203a52; `os1_32-real-*` (2026-11-11), develop at 5c7e3a86. The label
+renders (2026-11-12/13/15) replaced `os1_32-real-*` only where identical
+(all 60) and the other `os1_32` and `vlp16` variants in full. Files of the
+first release changed at the float-rounding level (the review of #170 made
+the trajectory interpolation use times relative to the first knot) and, in
+the noisy variants, in the noise draws after a changed point count. The
+in-place `imu1` `sensorPose` patch of 2026-11-12 is superseded. Do not
+re-render published files without the owner's approval.
 
 - MRPT/mvsim#170, exact timestamps for the IMU finite differences.
   `mrpt::Clock::fromDouble()` truncated times. `CPose3DInterpolator` resolves

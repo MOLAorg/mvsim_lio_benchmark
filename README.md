@@ -50,7 +50,7 @@ parameters are pinned in this repository, and the noise uses fixed seeds.
 | LiDAR sweeps | 798.02 thousand |
 | LiDAR points | 24.66 billion |
 | IMU samples | 15.96 million |
-| data size | 264.5 GB |
+| data size | 266.2 GB |
 
 Per variant:
 
@@ -368,9 +368,7 @@ the surface its ray hit, and `instance` (0 for extended surfaces such as
 roads, terrain, floors and walls). Mixed returns, a range between two
 surfaces, are labeled `outlier`. Labels never change the points: a labeled
 render is identical to the unlabeled one with the same MVSim build.
-The `os1_32-clean-rolling`, `os1_32-real-*` and `os1_64-*` variants carry the
-labels. The others (`os1_32-clean-global`, `os1_32-noisy-*`,
-`vlp16-noisy-rolling`) do not.
+All variants carry the labels.
 Outdoor classes reuse the SemanticKITTI raw label ids; indoor ones start at
 100.
 
@@ -410,7 +408,7 @@ Per sequence, under `<world>/<trajectory>/`:
 
 | file | contents |
 |---|---|
-| `<variant>.rawlog` | MRPT rawlog (gzip): `CObservationPointCloud` (`lidar1`, a `CGenericPointsMap` with fields `x y z t ring`, plus `label instance` if rendered with labels; `sensorPose` = `lidar1` in `base_link`), `CObservationIMU` (`imu1`; `sensorPose` = `imu1` in `base_link`), `CObservationOdometry` (`odom`), in time order |
+| `<variant>.rawlog` | MRPT rawlog (gzip): `CObservationPointCloud` (`lidar1`, a `CGenericPointsMap` with fields `x y z t ring label instance`; `sensorPose` = `lidar1` in `base_link`), `CObservationIMU` (`imu1`; `sensorPose` = `imu1` in `base_link`), `CObservationOdometry` (`odom`), in time order |
 | `<variant>.gt.tum` | `base_link` ground truth at the sweep start times (10 Hz) |
 | `<variant>.lidar1.gt.tum` | `lidar1` ground truth at the sweep start times |
 | `<variant>.gen.log` | generator command line and log |
@@ -448,7 +446,7 @@ rawlog2rosbag -i $S/os1_32-noisy-rolling.rawlog -o office_spins_os1_32-noisy-rol
 
 | topic | type | contents |
 |---|---|---|
-| `/lidar1/points` | `sensor_msgs/PointCloud2` | one sweep per message (10 Hz), in the `lidar1` frame: `x y z t` (float32), `ring` (uint16), plus `label instance` (uint16) in sequences rendered with labels. `t` is in seconds from the header stamp, the sweep start |
+| `/lidar1/points` | `sensor_msgs/PointCloud2` | one sweep per message (10 Hz), in the `lidar1` frame: `x y z t` (float32), `ring label instance` (uint16). `t` is in seconds from the header stamp, the sweep start |
 | `/imu1/imu` | `sensor_msgs/Imu` | 200 Hz angular velocity and specific force, in the `imu1` frame (no orientation) |
 | `/odom/odom` | `nav_msgs/Odometry` | wheel odometry, `odom` to `base_link` (10 Hz) |
 | `/tf` | `tf2_msgs/TFMessage` | `odom` to `base_link`, from the wheel odometry |
@@ -498,46 +496,45 @@ MVSim build.
 
 ### Data provenance
 
-These MVSim builds produced the published files:
+Every published file comes from one MVSim build: 2.1.0 (`develop` at
+1ffefda4) plus MRPT/mvsim#182 (point labels) and #183 (IMU sensor pose).
+`tools/generate.py` with that build reproduces them byte for byte.
+
+How the files got there:
 
 - The 2026-11-04 release (the first 13 worlds) was rendered with a local
-  build of the three fixes before their upstream review.
-- The robot dog sequences (`apartment_building/*`, `stair_course/*`,
-  `stairwell/dog_floors`) were rendered on 2026-11-06 with upstream MVSim
-  `develop` at commit 7b203a52, which merged those fixes.
-- Nine files of the first release were also re-rendered with 7b203a52:
-  `stairwell/handheld_stairs` (all five variants) and
-  `stairwell/legged_floors` (the four `os1_32` variants).
-  `stairwell/legged_floors/vlp16-noisy-rolling` is still the 2026-11-04 file.
-- The `os1_32-real-global` and `os1_32-real-rolling` variants of all 30
-  sequences were rendered on 2026-11-11 with upstream MVSim `develop` at
-  commit 5c7e3a86, which includes the realistic error model.
-- The `os1_64-*` variants were rendered on 2026-11-12 with MVSim 2.1.0
-  (`develop` at 1ffefda4) plus MRPT/mvsim#182 (point labels) and #183 (IMU
-  sensor pose).
-- The labels were added on 2026-11-12 and 2026-11-13 by rendering again with
-  that same build. Each `os1_32-real-*` file was replaced only if its points
-  and ground truth were identical to the released file (all 60 were). All 30
-  `os1_32-clean-rolling` files were replaced: 6 are identical, and the 24 of
-  the first release differ at the float-rounding level described below.
-  Through rays that graze an edge, that can move a single point by up to the
-  range jump, and change the point count of a few sweeps.
-
-Until MRPT/mvsim#183, the generator left the `sensorPose` of the IMU
-observations at the identity. The samples themselves were already simulated
-at the mounting pose. On 2026-11-12 the `imu1` observations of every
-`os1_32-*` and `vlp16-*` file got their mounting pose, in place: only that
-field changed, and a patched file is byte-identical to a render with the
-fixed generator ([`tools/rawlog_tools`](tools/rawlog_tools/README.md)).
+  build of the three fixes before their upstream review. The robot dog
+  sequences (`apartment_building/*`, `stair_course/*`, `stairwell/dog_floors`)
+  were rendered on 2026-11-06 with upstream `develop` at 7b203a52, which
+  merged those fixes, and `stairwell/handheld_stairs` and
+  `stairwell/legged_floors` were rendered again with it.
+- The `os1_32-real-*` variants were rendered on 2026-11-11 (`develop` at
+  5c7e3a86, which added the realistic error model), and the `os1_64-*`
+  variants on 2026-11-12 with the current build.
+- All other files were then rendered again with the current build, to add
+  the labels. Each `os1_32-real-*` file was replaced only if its points and
+  ground truth were identical to the released file (all 60 were).
+  `os1_32-clean-rolling` (2026-11-13), `os1_32-clean-global`,
+  `os1_32-noisy-*` and `vlp16-noisy-rolling` (2026-11-15) were replaced in
+  full: the files from 7b203a52 came out identical, and those of the
+  2026-11-04 release differ as described next.
 
 The review of the timestamp fix made the trajectory interpolation use times
-relative to the first knot. Upstream renders of the first-release sequences
-therefore differ from the 2026-11-04 files only at the float-rounding level:
-in the LiDAR points, and in a few ground-truth lines in the last printed
-digit (1e-6) of a quaternion component. Regenerating the
-first-release files with upstream MVSim gives files that are equivalent but
-not byte-identical. The generator logs (`*.gen.log`) of the first-release
-files that were not re-rendered were lost, and are not in the manifest.
+relative to the first knot. Renders with upstream MVSim therefore differ from
+the 2026-11-04 files at the float-rounding level: in the LiDAR points, and in
+a few ground-truth lines in the last printed digit (1e-6) of a quaternion
+component. Through rays that graze an edge, that can move a single point by
+up to the range jump, and change the point count of a few sweeps. In the
+noisy variants, a changed point count shifts the random draws that follow, so
+most points of the `os1_32-noisy-rolling` and `vlp16-noisy-rolling` files
+(and of `campus/ring_drive/os1_32-noisy-global`) got new noise values from the
+same distributions.
+
+Until MRPT/mvsim#183, the generator left the `sensorPose` of the IMU
+observations at the identity (the samples were already simulated at the
+mounting pose). The 2026-11-12 in-place fix of the `os1_32-*` and `vlp16-*`
+files ([`tools/rawlog_tools`](tools/rawlog_tools/README.md)) is superseded by
+the renders above.
 
 
 <!-- BEGIN gentime -->
@@ -545,21 +542,21 @@ Generation speed (simulated seconds per wall-clock second; cores per job in each
 
 | world | os1_32-clean-global (8 cores) | os1_32-clean-rolling (4 cores) | os1_32-noisy-global (8 cores) | os1_32-noisy-rolling (8 cores) | os1_32-real-global (4 cores) | os1_32-real-rolling (4 cores) | vlp16-noisy-rolling (8 cores) |
 |---|---|---|---|---|---|---|---|
-| apartment_building | 3.6x | 2.1x | 3.1x | 3.0x | 1.7x | 1.5x | 3.2x |
-| campus | 4.7x | 3.4x | 4.7x | 4.5x | 3.2x | 2.6x | 4.4x |
-| forest | 2.8x | 2.2x | 2.8x | 2.8x | 2.0x | 1.8x | 2.8x |
-| greenhouse | 2.9x | 1.9x | 2.5x | 2.4x | 1.5x | 1.4x | 2.7x |
-| office | 3.6x | 2.7x | 2.5x | 2.6x | 2.0x | 1.8x | 2.8x |
-| open_field | 6.2x | 4.0x | 5.8x | 5.8x | 4.6x | 4.2x | 5.8x |
-| orchard | 3.7x | 2.5x | 3.6x | 3.6x | 2.2x | 2.3x | 3.7x |
-| parking_garage | 3.5x | 2.2x | 3.0x | 3.0x | 1.8x | 2.1x | 3.2x |
-| parking_lot | 6.7x | 4.6x | 3.9x | 3.9x | 2.8x | 3.6x | 4.4x |
-| rough_terrain | 4.9x | 3.5x | 4.8x | 4.9x | 3.1x | 3.4x | 4.7x |
-| stair_course | 3.4x | 2.3x | 3.2x | 3.2x | 2.0x | 2.1x | 3.4x |
-| stairwell | 3.1x | 2.1x | 2.9x | 2.9x | 1.8x | 1.8x | 3.1x |
-| tunnel | 5.1x | 3.5x | 3.1x | 3.1x | 2.0x | 2.2x | 3.3x |
-| urban_street | 3.8x | 2.6x | 3.1x | 3.1x | 2.0x | 2.1x | 3.2x |
-| warehouse | 2.6x | 1.4x | 2.3x | 2.3x | 1.1x | 1.1x | 2.5x |
+| apartment_building | 2.1x | 2.1x | 2.3x | 2.2x | 1.7x | 1.5x | 2.2x |
+| campus | 3.7x | 3.4x | 3.4x | 3.5x | 3.2x | 2.6x | 3.4x |
+| forest | 2.3x | 2.2x | 2.4x | 2.3x | 2.0x | 1.8x | 2.3x |
+| greenhouse | 2.0x | 1.9x | 1.8x | 1.8x | 1.5x | 1.4x | 2.1x |
+| office | 2.8x | 2.7x | 2.5x | 2.4x | 2.0x | 1.8x | 2.7x |
+| open_field | 5.4x | 4.0x | 5.3x | 4.7x | 4.6x | 4.2x | 4.6x |
+| orchard | 2.5x | 2.5x | 2.9x | 2.4x | 2.2x | 2.3x | 2.5x |
+| parking_garage | 2.9x | 2.2x | 2.5x | 2.3x | 1.8x | 2.1x | 2.6x |
+| parking_lot | 4.8x | 4.6x | 3.6x | 3.7x | 2.8x | 3.6x | 3.6x |
+| rough_terrain | 4.4x | 3.5x | 3.6x | 3.8x | 3.1x | 3.4x | 4.0x |
+| stair_course | 2.8x | 2.3x | 2.2x | 2.0x | 2.0x | 2.1x | 2.8x |
+| stairwell | 2.4x | 2.1x | 2.3x | 2.2x | 1.8x | 1.8x | 2.5x |
+| tunnel | 4.0x | 3.5x | 2.4x | 2.4x | 2.0x | 2.2x | 3.0x |
+| urban_street | 3.1x | 2.6x | 2.2x | 2.2x | 2.0x | 2.1x | 2.5x |
+| warehouse | 1.9x | 1.4x | 1.7x | 1.6x | 1.1x | 1.1x | 1.9x |
 <!-- END gentime -->
 
 ## Validation with MOLA LiDAR odometry
@@ -657,22 +654,22 @@ their sizes and SHA-256 checksums is in [MANIFEST.tsv](MANIFEST.tsv) and
 <!-- BEGIN manifest -->
 | world | rawlogs | files | size |
 |---|---|---|---|
-| apartment_building | 18 | 98 | 24.4 GB |
-| campus | 18 | 90 | 29.1 GB |
-| forest | 18 | 90 | 17.2 GB |
-| greenhouse | 18 | 90 | 23.7 GB |
-| office | 18 | 90 | 14.0 GB |
-| open_field | 18 | 90 | 12.0 GB |
-| orchard | 18 | 90 | 21.2 GB |
-| parking_garage | 18 | 90 | 12.8 GB |
-| parking_lot | 18 | 90 | 11.1 GB |
-| rough_terrain | 18 | 90 | 11.0 GB |
+| apartment_building | 18 | 98 | 24.5 GB |
+| campus | 18 | 98 | 29.3 GB |
+| forest | 18 | 98 | 17.5 GB |
+| greenhouse | 18 | 98 | 23.9 GB |
+| office | 18 | 98 | 14.1 GB |
+| open_field | 18 | 98 | 12.0 GB |
+| orchard | 18 | 98 | 21.5 GB |
+| parking_garage | 18 | 98 | 12.8 GB |
+| parking_lot | 18 | 98 | 11.2 GB |
+| rough_terrain | 18 | 98 | 11.0 GB |
 | stair_course | 9 | 49 | 5.9 GB |
-| stairwell | 27 | 146 | 25.5 GB |
-| tunnel | 18 | 90 | 15.2 GB |
-| urban_street | 18 | 90 | 25.7 GB |
-| warehouse | 18 | 90 | 15.6 GB |
-| **total** | 270 | 1373 | **264.5 GB** |
+| stairwell | 27 | 147 | 25.6 GB |
+| tunnel | 18 | 98 | 15.2 GB |
+| urban_street | 18 | 98 | 25.9 GB |
+| warehouse | 18 | 98 | 15.7 GB |
+| **total** | 270 | 1470 | **266.2 GB** |
 <!-- END manifest -->
 
 ## Download
