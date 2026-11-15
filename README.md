@@ -677,7 +677,19 @@ their sizes and SHA-256 checksums is in [MANIFEST.tsv](MANIFEST.tsv) and
 
 ## Download
 
-TODO: the datasets will be published later; the location is not decided yet.
+The data is on the Hugging Face Hub:
+[MOLAorg/MVSim-LIO](https://huggingface.co/datasets/MOLAorg/MVSim-LIO) (upload in progress).
+With the `hf` CLI:
+
+```bash
+# Everything:
+hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio
+# One variant, with the 200 Hz ground truth of every sequence:
+hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio \
+  --include "*/*/os1_32-real-rolling.*" --include "*/*/gt_200hz.tum"
+# One sequence, all its variants:
+hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio --include "office/spins/*"
+```
 
 ## Limitations
 
