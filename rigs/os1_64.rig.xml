@@ -41,6 +41,8 @@
 		<beam_divergence_deg>${MVSIM_LIDAR_BEAM_DIVERGENCE_DEG|0}</beam_divergence_deg>
 		<max_incidence_deg>${MVSIM_LIDAR_MAX_INCIDENCE_DEG|0}</max_incidence_deg>
 		<mixed_pixel_probability>${MVSIM_LIDAR_MIXED_PIXEL_P|0}</mixed_pixel_probability>
+		<echo_separation>${MVSIM_LIDAR_ECHO_SEPARATION|0}</echo_separation>
+		<detection_range>${MVSIM_LIDAR_DETECTION_RANGE|0}</detection_range>
 		<beam_elevation_std_deg>${MVSIM_LIDAR_BEAM_ELEVATION_STD_DEG|0}</beam_elevation_std_deg>
 		<beam_azimuth_std_deg>${MVSIM_LIDAR_BEAM_AZIMUTH_STD_DEG|0}</beam_azimuth_std_deg>
 		<beam_range_bias_std>${MVSIM_LIDAR_BEAM_RANGE_BIAS_STD|0}</beam_range_bias_std>

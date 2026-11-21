@@ -52,16 +52,21 @@ def seed_for(world, traj):
     return zlib.crc32(f'{world}/{traj}'.encode()) & 0x7fffffff
 
 
-# The "real" noise level: a realistic LiDAR error model (range noise growing
-# with range and incidence, grazing dropouts, mixed returns at depth edges,
-# per-beam calibration errors), with its parameters drawn per sequence and
-# rig, so that no single sensor's error profile is learned.
+# The "real" noise level: a realistic LiDAR error model, with its parameters drawn per
+# sequence and rig from ranges that bracket two real Ouster sensors (a parked OS0-32 and
+# the OS1-64 of Newer College against its TLS map), so that no single sensor's error
+# profile is learned: range noise growing with range, a beam of finite divergence sampled
+# by sub-rays (the footprint spreads the return on oblique surfaces; at depth edges, the
+# echoes of surfaces closer than the echo separation merge into one return between them),
+# a detection range (weak returns at long range and grazing incidence are lost) and
+# per-beam calibration errors. The first release (2026-11) used ranges and a model with a
+# grazing-angle cutoff and random mixed pixels instead (see the README).
 REAL_ERROR_RANGES = {
     'MVSIM_LIDAR_RANGE_STD': (0.005, 0.02),
-    'MVSIM_LIDAR_RANGE_STD_PER_M': (0.0, 3e-4),
-    'MVSIM_LIDAR_BEAM_DIVERGENCE_DEG': (0.05, 0.3),
-    'MVSIM_LIDAR_MAX_INCIDENCE_DEG': (78.0, 88.0),
-    'MVSIM_LIDAR_MIXED_PIXEL_P': (0.1, 0.5),
+    'MVSIM_LIDAR_RANGE_STD_PER_M': (5e-4, 1.5e-3),
+    'MVSIM_LIDAR_BEAM_DIVERGENCE_DEG': (0.1, 0.3),
+    'MVSIM_LIDAR_ECHO_SEPARATION': (1.5, 3.0),
+    'MVSIM_LIDAR_DETECTION_RANGE': (110.0, 250.0),
     'MVSIM_LIDAR_BEAM_ELEVATION_STD_DEG': (0.0, 0.04),
     'MVSIM_LIDAR_BEAM_AZIMUTH_STD_DEG': (0.0, 0.04),
     'MVSIM_LIDAR_BEAM_RANGE_BIAS_STD': (0.0, 0.01),
@@ -80,21 +85,6 @@ def real_error_env(world, traj, rig):
     env = {k: f'{r.uniform(lo, hi):.6g}' for k, (lo, hi) in REAL_ERROR_RANGES.items()}
     env['MVSIM_LIDAR_CALIB_SEED'] = str((seed_for(world, traj) ^ zlib.crc32(rig.encode())) & 0x7fffffff)
     return env
-
-
-# The "fitted" noise level (not in VARIANTS): the same model with the values
-# measured on real Ouster sensors (range noise and beam divergence fitted to a
-# parked OS0-32, mixed-pixel probability matched on Newer College against the
-# TLS map). Real sensors return from ground up to 88 deg of incidence within
-# 20 m, so there is no grazing cutoff. The per-ring calibration errors, not
-# measurable there, are those of the "real" level of the same sequence.
-FITTED_ERRORS = {
-    'MVSIM_LIDAR_RANGE_STD': '0.00684',
-    'MVSIM_LIDAR_RANGE_STD_PER_M': '0.00115',
-    'MVSIM_LIDAR_BEAM_DIVERGENCE_DEG': '0.276',
-    'MVSIM_LIDAR_MAX_INCIDENCE_DEG': '0',
-    'MVSIM_LIDAR_MIXED_PIXEL_P': '0.27',
-}
 
 
 def list_sequences(worlds):
@@ -155,10 +145,8 @@ def run_one(world, traj, variant, out_dir, work_dir, cores, force, labels=False)
     cmd += moving_block_args(world, traj, work_dir)
     env = dict(os.environ, MVSIM_LIO_RIG=str(ROOT / 'rigs' / f'{rig}.rig.xml'),
                TBB_NUM_THREADS=str(len(expand(cores))))
-    if noise in ('real', 'fitted'):
+    if noise == 'real':
         errors = real_error_env(world, traj, rig)
-        if noise == 'fitted':
-            errors.update(FITTED_ERRORS)
         env.update(errors)
         (odir / f'{variant}.errors.json').write_text(json.dumps(errors, indent=1) + '\n')
     t0 = time.time()

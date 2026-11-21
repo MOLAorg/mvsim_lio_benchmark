@@ -24,11 +24,11 @@ generated data is NOT in git; on the machine where it was made it lives in
    sensor rig with `MVSIM_LIO_RIG=rigs/<rig>.rig.xml` (the world XML includes
    `$env{MVSIM_LIO_RIG}`). Seeds depend only on (world, trajectory).
    Noise levels: `clean`, `noisy` (2 cm Gaussian), `real` (the realistic
-   LiDAR error model, parameters drawn per (world, trajectory, rig) from
-   `REAL_ERROR_RANGES` and written to `<variant>.errors.json`), and `fitted`
-   (not published: `FITTED_ERRORS`, the values measured on real Ouster
-   sensors, no grazing cutoff, the per-ring errors of `real`). The published
-   set is `VARIANTS` (nine variants); other rigs are defined but not rendered.
+   LiDAR error model with the beam model and a detection range, parameters
+   drawn per (world, trajectory, rig) from `REAL_ERROR_RANGES`, which bracket
+   two real Ouster sensors, and written to `<variant>.errors.json`). The
+   published set is `VARIANTS` (nine variants); other rigs are defined but not
+   rendered.
    `--labels` adds the per-point `label`/`instance` fields (MRPT/mvsim#182);
    it does not change the points.
 4. `tools/screenshot.py`, `tools/validate_mola.py`, `tools/make_docs.py`
@@ -59,9 +59,13 @@ from `~/ros2_ws`. Never build the whole workspace there (other packages carry
 local experimental patches). `tools/env.sh` sources `~/ros2_ws/install`, or
 `$MVSIM_LIO_MVSIM_INSTALL` if set.
 
-Data provenance (details in the README): every published file is a render
-of MVSim 2.1.0 (develop at 1ffefda4) plus #182 and #183, with labels;
-`tools/generate.py` with that build reproduces them byte for byte. Earlier
+Data provenance (details in the README): the `real` variants (release v2,
+2026-11-21, approved by the owner) are renders of MVSim develop at dadd2cac
+plus MRPT/mvsim#185 (the beam model and detection range, 513fbd7f), with the
+v2 `REAL_ERROR_RANGES`; the Hub keeps the first release under the tag `v1.0`.
+Every other published file is a render of MVSim 2.1.0 (develop at 1ffefda4)
+plus #182 and #183, with labels; develop at dadd2cac (and #185) reproduces
+them byte for byte, as does `tools/generate.py` with the first build. Earlier
 builds: the first release (2026-11-04, 13 worlds), a pre-review worktree of
 the three fixes below; the dog and nine stairwell files (2026-11-06), develop
 at 7b203a52; `os1_32-real-*` (2026-11-11), develop at 5c7e3a86. The label
