@@ -82,6 +82,21 @@ def real_error_env(world, traj, rig):
     return env
 
 
+# The "fitted" noise level (not in VARIANTS): the same model with the values
+# measured on real Ouster sensors (range noise and beam divergence fitted to a
+# parked OS0-32, mixed-pixel probability matched on Newer College against the
+# TLS map). Real sensors return from ground up to 88 deg of incidence within
+# 20 m, so there is no grazing cutoff. The per-ring calibration errors, not
+# measurable there, are those of the "real" level of the same sequence.
+FITTED_ERRORS = {
+    'MVSIM_LIDAR_RANGE_STD': '0.00684',
+    'MVSIM_LIDAR_RANGE_STD_PER_M': '0.00115',
+    'MVSIM_LIDAR_BEAM_DIVERGENCE_DEG': '0.276',
+    'MVSIM_LIDAR_MAX_INCIDENCE_DEG': '0',
+    'MVSIM_LIDAR_MIXED_PIXEL_P': '0.27',
+}
+
+
 def list_sequences(worlds):
     out = []
     for w in worlds:
@@ -140,8 +155,10 @@ def run_one(world, traj, variant, out_dir, work_dir, cores, force, labels=False)
     cmd += moving_block_args(world, traj, work_dir)
     env = dict(os.environ, MVSIM_LIO_RIG=str(ROOT / 'rigs' / f'{rig}.rig.xml'),
                TBB_NUM_THREADS=str(len(expand(cores))))
-    if noise == 'real':
+    if noise in ('real', 'fitted'):
         errors = real_error_env(world, traj, rig)
+        if noise == 'fitted':
+            errors.update(FITTED_ERRORS)
         env.update(errors)
         (odir / f'{variant}.errors.json').write_text(json.dumps(errors, indent=1) + '\n')
     t0 = time.time()

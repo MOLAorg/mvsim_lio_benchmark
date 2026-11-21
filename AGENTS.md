@@ -25,7 +25,9 @@ generated data is NOT in git; on the machine where it was made it lives in
    `$env{MVSIM_LIO_RIG}`). Seeds depend only on (world, trajectory).
    Noise levels: `clean`, `noisy` (2 cm Gaussian), `real` (the realistic
    LiDAR error model, parameters drawn per (world, trajectory, rig) from
-   `REAL_ERROR_RANGES` and written to `<variant>.errors.json`). The published
+   `REAL_ERROR_RANGES` and written to `<variant>.errors.json`), and `fitted`
+   (not published: `FITTED_ERRORS`, the values measured on real Ouster
+   sensors, no grazing cutoff, the per-ring errors of `real`). The published
    set is `VARIANTS` (nine variants); other rigs are defined but not rendered.
    `--labels` adds the per-point `label`/`instance` fields (MRPT/mvsim#182);
    it does not change the points.
