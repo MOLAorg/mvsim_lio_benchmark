@@ -60,12 +60,13 @@ local experimental patches). `tools/env.sh` sources `~/ros2_ws/install`, or
 `$MVSIM_LIO_MVSIM_INSTALL` if set.
 
 Data provenance (details in the README): the `real` variants (release v2,
-2026-11-21, approved by the owner) are renders of MVSim develop at dadd2cac
-plus MRPT/mvsim#185 (the beam model and detection range, 513fbd7f), with the
-v2 `REAL_ERROR_RANGES`; the Hub keeps the first release under the tag `v1.0`.
-Every other published file is a render of MVSim 2.1.0 (develop at 1ffefda4)
-plus #182 and #183, with labels; develop at dadd2cac (and #185) reproduces
-them byte for byte, as does `tools/generate.py` with the first build. Earlier
+2026-11-21, approved by the owner) are renders of MVSim develop at 8a45b9e1
+(merge of MRPT/mvsim#185, the beam model and detection range; same tree as its
+head 513fbd7f), with the v2 `REAL_ERROR_RANGES`; the Hub keeps the first
+release under the tag `v1.0`. Every other published file is a render of MVSim
+2.1.0 (develop at 1ffefda4) plus #182 and #183, with labels; develop at
+8a45b9e1 reproduces them byte for byte, as does `tools/generate.py` with the
+first build. Earlier
 builds: the first release (2026-11-04, 13 worlds), a pre-review worktree of
 the three fixes below; the dog and nine stairwell files (2026-11-06), develop
 at 7b203a52; `os1_32-real-*` (2026-11-11), develop at 5c7e3a86. The label

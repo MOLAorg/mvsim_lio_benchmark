@@ -29,7 +29,7 @@ viewer: false
 (20.1 km, 148 minutes) of five carriers (car, UGV, legged, hand-held, quadruped dog), rendered
 as MRPT `.rawlog` datasets: a rotating 3D LiDAR with per-point timestamps, a 200 Hz IMU and
 wheel odometry, with exact ground truth. Each trajectory is rendered with nine sensor variants
-(270 sequences, 266 GB).
+(270 sequences, 272 GB).
 
 - **Exact ground truth**: the trajectory is the simulator's input (a C2 spline you can evaluate
   at any time), and the map is the world's analytic geometry. No GNSS/INS, total station or TLS
@@ -37,9 +37,10 @@ wheel odometry, with exact ground truth. Each trajectory is rendered with nine s
 - **Paired variants**: every trajectory is rendered with global and rolling shutter, and with
   three noise levels (noise-free, Gaussian, and a realistic LiDAR error model), sharing the same
   random seeds, so that each factor can be studied on its own.
-- **Realistic sensor errors**: range noise growing with range, grazing-angle dropouts, beam
-  divergence, mixed pixels at depth edges and per-beam calibration errors, with parameters drawn
-  per sequence; MEMS-grade IMU noise with bias random walk.
+- **Realistic sensor errors**: range noise growing with range, a beam model (footprint spread on
+  oblique surfaces, mixed returns at depth edges), dropouts of weak returns at long range and
+  grazing incidence, and per-beam calibration errors, with parameters drawn per sequence from
+  ranges that bracket two real Ouster sensors; MEMS-grade IMU noise with bias random walk.
 - **Per-point semantic and instance labels**.
 
 Uses: evaluation of LiDAR and LiDAR-inertial odometry and SLAM, on scenes that range from well
@@ -52,7 +53,7 @@ with ground truth free of any error.
 With the [Hugging Face CLI](https://huggingface.co/docs/huggingface_hub/guides/cli) (`hf`):
 
 ```bash
-# Everything (266 GB):
+# Everything (272 GB):
 hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio
 
 # One variant, with the 200 Hz ground truth of every sequence:
@@ -67,11 +68,11 @@ Size of each variant (all 30 sequences):
 
 | variant | size | variant | size |
 |---|---|---|---|
-| `os1_32-clean-global` | 21.5 GB | `os1_32-real-rolling` | 24.6 GB |
+| `os1_32-clean-global` | 21.5 GB | `os1_32-real-rolling` | 25.9 GB |
 | `os1_32-clean-rolling` | 22.1 GB | `vlp16-noisy-rolling` | 24.0 GB |
 | `os1_32-noisy-global` | 25.5 GB | `os1_64-noisy-rolling` | 50.6 GB |
-| `os1_32-noisy-rolling` | 25.9 GB | `os1_64-real-rolling` | 47.6 GB |
-| `os1_32-real-global` | 24.1 GB | `gt_200hz.tum` (shared) | 0.2 GB |
+| `os1_32-noisy-rolling` | 25.9 GB | `os1_64-real-rolling` | 50.5 GB |
+| `os1_32-real-global` | 25.4 GB | `gt_200hz.tum` (shared) | 0.2 GB |
 
 Each file's size and SHA-256 checksum are in `MANIFEST.tsv` and `SHA256SUMS`
 (`sha256sum -c SHA256SUMS` in the download directory; with a partial download, check only the
@@ -147,11 +148,16 @@ sequence, so the variants of a sequence are paired. The `os1_64` variants differ
 | `vlp16` | 16, uniform | 30 deg (+-15) | 1808 | 10 Hz | 0.4 to 100 m |
 | `os1_64` | 64, uniform | 45 deg (+-22.5) | 1024 | 10 Hz | 0.5 to 60 m |
 
-- **Realistic error model** (`real` variants, per ray): no return beyond a maximum incidence
-  angle; Gaussian range noise with std `sqrt(s0^2 + (k r)^2)`; the beam footprint spread over
-  oblique surfaces; mixed returns at depth edges; per-ring elevation, azimuth and range biases.
-  The parameters are drawn per sequence and stored next to each rawlog as
-  `<variant>.errors.json`.
+- **Realistic error model** (`real` variants, per ray, error model v2): a beam sampled by seven
+  sub-rays, whose hits form echoes (one per surface, or merged across surfaces closer than the
+  echo separation) and whose strongest echo is the return, so that mixed returns at depth edges
+  follow the geometry; Gaussian range noise with std `sqrt(s0^2 + (k r)^2)`; the echo's range
+  spread (footprint on oblique surfaces, depth of thin objects), capped; a detection range that
+  drops weak returns at long range and grazing incidence; per-ring elevation, azimuth and range
+  biases. The parameters are drawn per sequence from ranges that bracket two real Ouster
+  sensors, and stored next to each rawlog as `<variant>.errors.json`. The first release of the
+  `real` variants (another error model, with a grazing-angle cutoff and random mixed pixels) is
+  kept under the tag `v1.0`: `hf download MOLAorg/MVSim-LIO --repo-type dataset --revision v1.0`.
 - **Global shutter**: the whole sweep is cast from the pose at the sweep start; every point has
   `t = 0`.
 - **Rolling shutter**: column `c` fires at `t = c * 0.1 / columns` s after the sweep start, from

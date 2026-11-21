@@ -18,10 +18,11 @@ exact ground truth.
   shutter, and with three noise levels (noise-free, Gaussian, and a
   realistic LiDAR error model), sharing the same random seeds, so that each
   factor can be studied on its own.
-- **Realistic sensor errors**: range noise growing with range, grazing-angle
-  dropouts, beam divergence, mixed pixels at depth edges and per-beam
-  calibration errors, with parameters drawn per sequence; MEMS-grade IMU
-  noise with bias random walk.
+- **Realistic sensor errors**: range noise growing with range, a beam model
+  (footprint spread on oblique surfaces, mixed returns at depth edges),
+  dropouts of weak returns at long range and grazing incidence, and per-beam
+  calibration errors, with parameters drawn per sequence from ranges that
+  bracket two real Ouster sensors; MEMS-grade IMU noise with bias random walk.
 
 Uses:
 
@@ -48,9 +49,9 @@ parameters are pinned in this repository, and the noise uses fixed seeds.
 | sensor variants | 9 |
 | rendered sequences | 270 (181 km, 22.2 h of sensor data) |
 | LiDAR sweeps | 798.02 thousand |
-| LiDAR points | 24.66 billion |
+| LiDAR points | 25.21 billion |
 | IMU samples | 15.96 million |
-| data size | 266.2 GB |
+| data size | 271.7 GB |
 
 Per variant:
 
@@ -60,11 +61,11 @@ Per variant:
 | `os1_32-clean-rolling` | 30 | 88,669 | 2.32 billion | 26,118 | 1,772,920 |
 | `os1_32-noisy-global` | 30 | 88,669 | 2.32 billion | 26,116 | 1,772,920 |
 | `os1_32-noisy-rolling` | 30 | 88,669 | 2.32 billion | 26,116 | 1,772,920 |
-| `os1_32-real-global` | 30 | 88,669 | 2.16 billion | 24,407 | 1,772,920 |
-| `os1_32-real-rolling` | 30 | 88,669 | 2.16 billion | 24,407 | 1,772,920 |
+| `os1_32-real-global` | 30 | 88,669 | 2.30 billion | 25,936 | 1,772,920 |
+| `os1_32-real-rolling` | 30 | 88,669 | 2.30 billion | 25,936 | 1,772,920 |
 | `vlp16-noisy-rolling` | 30 | 88,669 | 2.11 billion | 23,825 | 1,772,920 |
 | `os1_64-noisy-rolling` | 30 | 88,669 | 4.63 billion | 52,249 | 1,772,920 |
-| `os1_64-real-rolling` | 30 | 88,669 | 4.32 billion | 48,746 | 1,772,920 |
+| `os1_64-real-rolling` | 30 | 88,669 | 4.60 billion | 51,891 | 1,772,920 |
 <!-- END totals -->
 
 ## Worlds
@@ -263,29 +264,45 @@ are rendered in the published data; the others are defined for
 - **Range noise**: Gaussian, 0.02 m std in the `noisy` variants, none in the
   `clean` ones.
 - **Realistic error model** (`real` variants, applied by `mvsim-dataset-gen`
-  per ray): (1) no return beyond a maximum incidence angle; (2) Gaussian range
-  noise with std `sqrt(s0^2 + (k r)^2)`, growing with the range `r`; (3) the
-  beam footprint (`r` x divergence) on an oblique surface spreads the return
-  uniformly over `r * divergence * tan(incidence)`; (4) at depth edges (a
-  neighbor ray hits off the local tangent plane by more than
-  max(5 cm, 2% of `r`)), a mixed return at a range drawn between both
-  surfaces, with some probability; (5) per-ring calibration errors drawn once
-  per sequence: elevation and azimuth offsets (the ray samples the scene
-  along the perturbed direction, but the point is reported along the nominal
-  one) and a range bias. The parameters are drawn uniformly per sequence and
-  rig from these ranges (`REAL_ERROR_RANGES` in `tools/generate.py`), and
-  stored next to each rawlog as `<variant>.errors.json`:
+  per ray; error model v2, see below for the first release's): (1) a beam of
+  finite divergence, whose footprint seven sub-rays sample (its axis and six
+  rays on the cone of half the divergence, weighted as a Gaussian beam). Their
+  hits on one surface, or on surfaces closer than the echo separation along
+  the beam, form an echo at their power-weighted mean range (power
+  `cos(incidence) / r^2`); the strongest echo is the return, reported along
+  the axis. At a depth edge, two surfaces within the separation give a mixed
+  return between both, which persists while the geometry does. (2) Gaussian
+  range noise with std `sqrt(s0^2 + (k r)^2)`, growing with the range `r`;
+  (3) a uniform term over the echo's range spread (the footprint on an
+  oblique surface, or the depth of an object narrower than the beam), up to
+  its value at 80 deg of incidence and at most 0.15 m; (4) a detection range
+  `R`: a return needs `cos(incidence) / r^2 >= 1 / R^2`, so that weak returns
+  at long range and grazing incidence are lost; (5) per-ring calibration
+  errors drawn once per sequence: elevation and azimuth offsets (the ray
+  samples the scene along the perturbed direction, but the point is reported
+  along the nominal one) and a range bias. The parameters are drawn uniformly
+  per sequence and rig from these ranges (`REAL_ERROR_RANGES` in
+  `tools/generate.py`), which bracket two real Ouster sensors (a parked
+  OS0-32, and the OS1-64 of the Newer College dataset against its TLS map),
+  and stored next to each rawlog as `<variant>.errors.json`:
 
   | parameter | range |
   |---|---|
   | range noise std, constant `s0` | 0.005 to 0.02 m |
-  | range noise std, per meter `k` | 0 to 3e-4 |
-  | full beam divergence | 0.05 to 0.3 deg |
-  | maximum incidence angle | 78 to 88 deg |
-  | mixed-return probability at depth edges | 0.1 to 0.5 |
+  | range noise std, per meter `k` | 5e-4 to 1.5e-3 |
+  | full beam divergence | 0.1 to 0.3 deg |
+  | echo separation | 1.5 to 3 m |
+  | detection range at normal incidence | 110 to 250 m |
   | per-ring elevation offset std | 0 to 0.04 deg |
   | per-ring azimuth offset std | 0 to 0.04 deg |
   | per-ring range bias std | 0 to 0.01 m |
+
+  The first release (Hub tag `v1.0`) used another model for the `real`
+  variants: no return beyond a maximum incidence angle (78 to 88 deg), the
+  footprint spread `r * divergence * tan(incidence)` on every surface, and
+  mixed returns drawn at random (probability 0.1 to 0.5) between neighbor
+  rays. Against real sensors, its cutoff removed ground returns that they
+  keep, and its footprint term was too strong on thin, distant objects.
 
 - **Global shutter**: the whole sweep is cast from the pose at the sweep start;
   every point has `t = 0`.
@@ -366,7 +383,8 @@ Every primitive of the worlds has a semantic class, and every discrete object
 MRPT/mvsim#182), each point gets two `uint16` fields: `label`, the class of
 the surface its ray hit, and `instance` (0 for extended surfaces such as
 roads, terrain, floors and walls). Mixed returns, a range between two
-surfaces, are labeled `outlier`. Labels never change the points: a labeled
+surfaces (in the `real` variants, an echo that joins hits on different
+surfaces), are labeled `outlier`. Labels never change the points: a labeled
 render is identical to the unlabeled one with the same MVSim build.
 All variants carry the labels.
 Outdoor classes reuse the SemanticKITTI raw label ids; indoor ones start at
@@ -496,9 +514,14 @@ MVSim build.
 
 ### Data provenance
 
-Every published file comes from one MVSim build: 2.1.0 (`develop` at
-1ffefda4) plus MRPT/mvsim#182 (point labels) and #183 (IMU sensor pose).
-`tools/generate.py` with that build reproduces them byte for byte.
+The `real` variants (`os1_32-real-*`, `os1_64-real-rolling`) are the error
+model v2 renders of 2026-11-21: MVSim `develop` at 8a45b9e1 (the merge of
+MRPT/mvsim#185, beam model and detection range; rendered from its head
+513fbd7f, the same tree), with the v2 parameter ranges; the first release's
+files are on the Hub under the tag `v1.0`. Every other published file comes
+from one MVSim build: 2.1.0 (`develop` at 1ffefda4) plus MRPT/mvsim#182
+(point labels) and #183 (IMU sensor pose). `tools/generate.py` with that
+build reproduces them byte for byte, and so does `develop` at 8a45b9e1.
 
 How the files got there:
 
@@ -540,23 +563,23 @@ the renders above.
 <!-- BEGIN gentime -->
 Generation speed (simulated seconds per wall-clock second; cores per job in each column, Xeon E5-2696 v4 at 2.2 GHz, on a shared machine), per world and variant:
 
-| world | os1_32-clean-global (8 cores) | os1_32-clean-rolling (4 cores) | os1_32-noisy-global (8 cores) | os1_32-noisy-rolling (8 cores) | os1_32-real-global (4 cores) | os1_32-real-rolling (4 cores) | vlp16-noisy-rolling (8 cores) |
+| world | os1_32-clean-global (8 cores) | os1_32-clean-rolling (4 cores) | os1_32-noisy-global (8 cores) | os1_32-noisy-rolling (8 cores) | os1_32-real-global (8 cores) | os1_32-real-rolling (8 cores) | vlp16-noisy-rolling (8 cores) |
 |---|---|---|---|---|---|---|---|
-| apartment_building | 2.1x | 2.1x | 2.3x | 2.2x | 1.7x | 1.5x | 2.2x |
-| campus | 3.7x | 3.4x | 3.4x | 3.5x | 3.2x | 2.6x | 3.4x |
-| forest | 2.3x | 2.2x | 2.4x | 2.3x | 2.0x | 1.8x | 2.3x |
-| greenhouse | 2.0x | 1.9x | 1.8x | 1.8x | 1.5x | 1.4x | 2.1x |
-| office | 2.8x | 2.7x | 2.5x | 2.4x | 2.0x | 1.8x | 2.7x |
-| open_field | 5.4x | 4.0x | 5.3x | 4.7x | 4.6x | 4.2x | 4.6x |
-| orchard | 2.5x | 2.5x | 2.9x | 2.4x | 2.2x | 2.3x | 2.5x |
-| parking_garage | 2.9x | 2.2x | 2.5x | 2.3x | 1.8x | 2.1x | 2.6x |
-| parking_lot | 4.8x | 4.6x | 3.6x | 3.7x | 2.8x | 3.6x | 3.6x |
-| rough_terrain | 4.4x | 3.5x | 3.6x | 3.8x | 3.1x | 3.4x | 4.0x |
-| stair_course | 2.8x | 2.3x | 2.2x | 2.0x | 2.0x | 2.1x | 2.8x |
-| stairwell | 2.4x | 2.1x | 2.3x | 2.2x | 1.8x | 1.8x | 2.5x |
-| tunnel | 4.0x | 3.5x | 2.4x | 2.4x | 2.0x | 2.2x | 3.0x |
-| urban_street | 3.1x | 2.6x | 2.2x | 2.2x | 2.0x | 2.1x | 2.5x |
-| warehouse | 1.9x | 1.4x | 1.7x | 1.6x | 1.1x | 1.1x | 1.9x |
+| apartment_building | 2.1x | 2.1x | 2.3x | 2.2x | 0.9x | 1.0x | 2.2x |
+| campus | 3.7x | 3.4x | 3.4x | 3.5x | 2.7x | 1.9x | 3.4x |
+| forest | 2.3x | 2.2x | 2.4x | 2.3x | 1.3x | 1.2x | 2.3x |
+| greenhouse | 2.0x | 1.9x | 1.8x | 1.8x | 0.9x | 0.8x | 2.1x |
+| office | 2.8x | 2.7x | 2.5x | 2.4x | 1.3x | 1.3x | 2.7x |
+| open_field | 5.4x | 4.0x | 5.3x | 4.7x | 4.3x | 4.4x | 4.6x |
+| orchard | 2.5x | 2.5x | 2.9x | 2.4x | 2.0x | 2.0x | 2.5x |
+| parking_garage | 2.9x | 2.2x | 2.5x | 2.3x | 1.3x | 1.3x | 2.6x |
+| parking_lot | 4.8x | 4.6x | 3.6x | 3.7x | 2.6x | 2.6x | 3.6x |
+| rough_terrain | 4.4x | 3.5x | 3.6x | 3.8x | 3.3x | 2.9x | 4.0x |
+| stair_course | 2.8x | 2.3x | 2.2x | 2.0x | 1.0x | 1.3x | 2.8x |
+| stairwell | 2.4x | 2.1x | 2.3x | 2.2x | 1.0x | 1.0x | 2.5x |
+| tunnel | 4.0x | 3.5x | 2.4x | 2.4x | 1.2x | 1.5x | 3.0x |
+| urban_street | 3.1x | 2.6x | 2.2x | 2.2x | 1.3x | 1.1x | 2.5x |
+| warehouse | 1.9x | 1.4x | 1.7x | 1.6x | 0.5x | 0.5x | 1.9x |
 <!-- END gentime -->
 
 ## Validation with MOLA LiDAR odometry
@@ -654,28 +677,28 @@ their sizes and SHA-256 checksums is in [MANIFEST.tsv](MANIFEST.tsv) and
 <!-- BEGIN manifest -->
 | world | rawlogs | files | size |
 |---|---|---|---|
-| apartment_building | 18 | 98 | 24.5 GB |
-| campus | 18 | 98 | 29.3 GB |
-| forest | 18 | 98 | 17.5 GB |
+| apartment_building | 18 | 98 | 24.6 GB |
+| campus | 18 | 98 | 30.2 GB |
+| forest | 18 | 98 | 17.8 GB |
 | greenhouse | 18 | 98 | 23.9 GB |
 | office | 18 | 98 | 14.1 GB |
-| open_field | 18 | 98 | 12.0 GB |
-| orchard | 18 | 98 | 21.5 GB |
-| parking_garage | 18 | 98 | 12.8 GB |
-| parking_lot | 18 | 98 | 11.2 GB |
-| rough_terrain | 18 | 98 | 11.0 GB |
-| stair_course | 9 | 49 | 5.9 GB |
+| open_field | 18 | 98 | 12.9 GB |
+| orchard | 18 | 98 | 21.7 GB |
+| parking_garage | 18 | 98 | 13.2 GB |
+| parking_lot | 18 | 98 | 12.0 GB |
+| rough_terrain | 18 | 98 | 11.8 GB |
+| stair_course | 9 | 49 | 6.0 GB |
 | stairwell | 27 | 147 | 25.6 GB |
 | tunnel | 18 | 98 | 15.2 GB |
-| urban_street | 18 | 98 | 25.9 GB |
-| warehouse | 18 | 98 | 15.7 GB |
-| **total** | 270 | 1470 | **266.2 GB** |
+| urban_street | 18 | 98 | 26.7 GB |
+| warehouse | 18 | 98 | 15.8 GB |
+| **total** | 270 | 1470 | **271.7 GB** |
 <!-- END manifest -->
 
 ## Download
 
 The data is on the Hugging Face Hub:
-[MOLAorg/MVSim-LIO](https://huggingface.co/datasets/MOLAorg/MVSim-LIO), all variants (266 GB).
+[MOLAorg/MVSim-LIO](https://huggingface.co/datasets/MOLAorg/MVSim-LIO), all variants (272 GB).
 With the `hf` CLI:
 
 ```bash
@@ -696,9 +719,10 @@ hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio --includ
   not ray-traced, so trees are made of trunks, branches and clusters of small
   spheres, and cars of boxes and wheels.
 - No glass: windows and doors are open gaps. No intensity, multi-echo or
-  reflections. Beam divergence, grazing-angle dropouts, mixed returns and
+  reflections. The beam model, the detection range, mixed returns and
   per-beam calibration errors exist only in the `real` variants, and are
-  geometric models (there is no material model).
+  geometric models (there is no material model: every surface reflects
+  alike).
 - The scenes are static (no dynamic objects).
 - The IMU has white noise and bias random walk, but no initial bias, scale
   factor or axis misalignment errors. All sensors share one clock (no time
