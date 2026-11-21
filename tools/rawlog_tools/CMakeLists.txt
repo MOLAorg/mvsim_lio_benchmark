@@ -15,3 +15,6 @@ target_link_libraries(compare-rawlogs mrpt::mrpt_maps mrpt::mrpt_obs)
 
 add_executable(set-imu-pose set_imu_pose.cpp)
 target_link_libraries(set-imu-pose mrpt::mrpt_maps mrpt::mrpt_obs)
+
+add_executable(rawlog-to-text rawlog_to_text.cpp)
+target_link_libraries(rawlog-to-text mrpt::mrpt_maps mrpt::mrpt_obs)

@@ -53,8 +53,13 @@ with ground truth free of any error.
 With the [Hugging Face CLI](https://huggingface.co/docs/huggingface_hub/guides/cli) (`hf`):
 
 ```bash
-# Everything (272 GB):
-hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio
+# Everything but the plain-text copy (272 GB):
+hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio --exclude "text/*"
+
+# The plain-text copy of one variant, with its reader:
+hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio \
+  --include "text/*/*/os1_32-real-rolling/*" --include "text/*/*/gt_200hz.tum.xz" \
+  --include "text/README.md" --include "text/mvsim_lio_text.py"
 
 # One variant, with the 200 Hz ground truth of every sequence:
 hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio \
@@ -226,6 +231,15 @@ association with the 10 Hz files.
 
 Rawlogs can be read with [MRPT](https://github.com/MRPT/mrpt) (C++ or Python) and run directly
 with [MOLA](https://github.com/MOLAorg/mola) (`mola-lo-cli-rawlog`).
+
+### Plain-text copy
+
+Every rawlog also exists as plain-text tables compressed with xz, under
+`text/<world>/<trajectory>/<variant>/`: `lidar.txt.xz` (one point per line,
+`t_ns x y z ring label instance`), `sweeps.txt.xz`, `imu.txt.xz`, `odometry.txt.xz`,
+`extrinsics.yaml` and copies of the ground truth files. They need neither MRPT nor ROS:
+[`text/mvsim_lio_text.py`](text/mvsim_lio_text.py) reads them with Python and NumPy only, and
+[`text/README.md`](text/README.md) describes the format. Point coordinates are rounded to 1 mm.
 
 ## Using the data from ROS 2
 

@@ -443,6 +443,15 @@ for rolling-shutter data, +0.05 s): compare against the ground truth at the
 estimate's own timestamps (e.g. interpolating `gt_200hz.tum`), not by
 nearest-stamp association with the 10 Hz files.
 
+### Plain-text copy
+
+Every rawlog also exists as plain-text tables compressed with xz, under
+`text/<world>/<trajectory>/<variant>/`: `lidar.txt.xz` (one point per line,
+`t_ns x y z ring label instance`), `sweeps.txt.xz`, `imu.txt.xz`, `odometry.txt.xz`,
+`extrinsics.yaml` and copies of the ground truth files. They need neither MRPT nor ROS:
+[`tools/mvsim_lio_text.py`](tools/mvsim_lio_text.py) reads them with Python and NumPy only, and
+[`hf/text_README.md`](hf/text_README.md) describes the format (`tools/export_text.sh` writes them, with `rawlog-to-text` from `tools/rawlog_tools`). Point coordinates are rounded to 1 mm.
+
 ## Using the data from ROS 2
 
 `rawlog2rosbag` (in [mrpt_ros_bridge](https://github.com/MRPT/mrpt_ros_bridge))
@@ -703,8 +712,12 @@ The data is on the Hugging Face Hub:
 With the `hf` CLI:
 
 ```bash
-# Everything:
-hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio
+# Everything but the plain-text copy:
+hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio --exclude "text/*"
+# The plain-text copy of one variant, with its reader:
+hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio \
+  --include "text/*/*/os1_32-real-rolling/*" --include "text/*/*/gt_200hz.tum.xz" \
+  --include "text/README.md" --include "text/mvsim_lio_text.py"
 # One variant, with the 200 Hz ground truth of every sequence:
 hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio \
   --include "*/*/os1_32-real-rolling.*" --include "*/*/gt_200hz.tum"

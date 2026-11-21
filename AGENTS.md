@@ -44,6 +44,9 @@ generated data is NOT in git; on the machine where it was made it lives in
    repository is not linked from it while private). `tools/hf_stage.py`
    builds a symlink tree of the `MANIFEST.tsv` files of some variants, the
    card and its banner, to upload with `hf upload ... --repo-type dataset`.
+   The plain-text copy (`text/` on the Hub, format in `hf/text_README.md`,
+   reader `tools/mvsim_lio_text.py`) is written by `tools/export_text.sh`
+   (`rawlog-to-text`, xz -9, 1 mm) and uploaded by `tools/upload_text.sh`.
 
 Changing a world or trajectory invalidates its data: regenerate with
 `tools/generate.py --worlds <w> --trajs <t> --force` (a sequence whose rawlog

@@ -14,6 +14,12 @@ Two small C++ tools for checking and maintaining the published rawlogs.
   pose (`0.05 -0.03 0.45 0 0 0`); the result is byte-identical to a render
   with the fixed generator.
 
+- `rawlog-to-text IN.rawlog OUT_DIR [COMPRESS_CMD [EXT]]`: exports a rawlog
+  to the plain-text tables of the Hub copy (`lidar.txt`, `sweeps.txt`,
+  `imu.txt`, `odometry.txt`, `extrinsics.yaml`; format in
+  `hf/text_README.md`), piping `lidar.txt` through `COMPRESS_CMD` if given.
+  `tools/export_text.sh` runs it on every published rawlog.
+
 Build (needs MRPT, e.g. from `source tools/env.sh`):
 
 ```bash
