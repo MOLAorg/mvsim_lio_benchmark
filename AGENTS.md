@@ -40,8 +40,8 @@ generated data is NOT in git; on the machine where it was made it lives in
 6. `tools/rawlog_tools` (C++): `compare-rawlogs` (identical points of two
    renders, label histogram) and `set-imu-pose` (in-place IMU pose fix).
 7. Hosting: the data is on the Hugging Face Hub, dataset `MOLAorg/MVSim-LIO`.
-   Its card is `hf/README.md` (keep it in sync with this README; the GitHub
-   repository is not linked from it while private). `tools/hf_stage.py`
+   Its card is `hf/README.md` (keep it in sync with this README, including the
+   data access notes for AI agents). `tools/hf_stage.py`
    builds a symlink tree of the `MANIFEST.tsv` files of some variants, the
    card and its banner, to upload with `hf upload ... --repo-type dataset`.
    The plain-text copy (`text/` on the Hub, format in `hf/text_README.md`,

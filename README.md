@@ -1,4 +1,26 @@
-# mvsim_lio_benchmark
+<h1 align="center">MVSim-LIO</h1>
+
+<p align="center"><b>A simulated LiDAR-inertial odometry benchmark with exact ground truth</b><br>
+15 worlds · 30 trajectories · 20.1 km · 9 sensor variants · 25 billion labeled points</p>
+
+<p align="center">
+  <a href="https://huggingface.co/datasets/MOLAorg/MVSim-LIO"><img alt="Dataset on Hugging Face" src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-MOLAorg%2FMVSim--LIO-ffd21e"></a>
+  <a href="https://huggingface.co/datasets/MOLAorg/MVSim-LIO/tree/v2.1"><img alt="Data release v2.1" src="https://img.shields.io/badge/data%20release-v2.1-2a78d6"></a>
+  <img alt="Size: 272 GB of rawlogs and 101 GB of plain text" src="https://img.shields.io/badge/size-272%20GB%20rawlog%20%2B%20101%20GB%20text-5e5d59">
+  <a href="DATA_LICENSE.md"><img alt="Data license: CC BY 4.0" src="https://img.shields.io/badge/data-CC%20BY%204.0-1baf7a"></a>
+  <a href="LICENSE"><img alt="Code license: BSD-3-Clause" src="https://img.shields.io/badge/code-BSD--3--Clause-1baf7a"></a>
+  <a href="https://github.com/MRPT/mvsim"><img alt="Rendered with MVSim" src="https://img.shields.io/badge/rendered%20with-MVSim-eb6834"></a>
+</p>
+
+<p align="center">
+  <a href="#get-the-data"><b>Get the data</b></a> ·
+  <a href="https://huggingface.co/datasets/MOLAorg/MVSim-LIO">Hugging Face</a> ·
+  <a href="#for-ai-agents-and-scripts">For AI agents</a> ·
+  <a href="#files">File format</a> ·
+  <a href="#using-the-data-from-ros-2">ROS 2</a> ·
+  <a href="evaluation/">Evaluation code</a> ·
+  <a href="#how-to-regenerate">Regenerate</a>
+</p>
 
 <p align="center"><img src="docs/banner.gif" width="100%" alt="Exact ground-truth maps and trajectories of six of the worlds"></p>
 
@@ -37,6 +59,51 @@ Uses:
 
 Every sequence is fully reproducible: worlds, trajectories and sensor
 parameters are pinned in this repository, and the noise uses fixed seeds.
+
+## Get the data
+
+> [!TIP]
+> The data is on the Hugging Face Hub: **[MOLAorg/MVSim-LIO](https://huggingface.co/datasets/MOLAorg/MVSim-LIO)**,
+> public, no account needed. Pin the release **`v2.1`** for reproducible results.
+
+With the `hf` CLI (`pip install -U huggingface_hub`):
+
+```bash
+# One variant (realistic errors, OS1-32, rolling shutter) of all 30 sequences, with the 200 Hz ground truth (26 GB):
+hf download MOLAorg/MVSim-LIO --repo-type dataset --revision v2.1 --local-dir mvsim_lio \
+  --include "*/*/os1_32-real-rolling.*" --include "*/*/gt_200hz.tum"
+# One sequence, all its variants (5.3 GB):
+hf download MOLAorg/MVSim-LIO --repo-type dataset --revision v2.1 --local-dir mvsim_lio --include "office/spins/*"
+# Everything but the plain-text copy (272 GB):
+hf download MOLAorg/MVSim-LIO --repo-type dataset --revision v2.1 --local-dir mvsim_lio --exclude "text/*"
+# The plain-text copy of one variant, with its NumPy-only reader (no MRPT or ROS needed):
+hf download MOLAorg/MVSim-LIO --repo-type dataset --revision v2.1 --local-dir mvsim_lio \
+  --include "text/*/*/os1_32-real-rolling/*" --include "text/*/*/gt_200hz.tum.xz" \
+  --include "text/README.md" --include "text/mvsim_lio_text.py"
+# Check what you downloaded:
+hf download MOLAorg/MVSim-LIO SHA256SUMS --repo-type dataset --revision v2.1 --local-dir mvsim_lio
+(cd mvsim_lio && sha256sum -c --ignore-missing SHA256SUMS)
+```
+
+### For AI agents and scripts
+
+- Repository `MOLAorg/MVSim-LIO`, repo type `dataset`, revision `v2.1`; public, no token needed.
+- Read `MANIFEST.tsv` first (columns `path`, `bytes`, `sha256`; one row per rawlog, ground truth
+  and metadata file) and select files from it rather than listing the repository.
+- Paths: `<world>/<trajectory>/<variant>.{rawlog,gt.tum,lidar1.gt.tum,gen.log,counts.json}`,
+  `<variant>.errors.json` for the `real` variants, `<world>/<trajectory>/gt_200hz.tum`, and the
+  plain-text copy under `text/<world>/<trajectory>/<variant>/`.
+- Variants: `os1_32-{clean,noisy,real}-{global,rolling}`, `os1_64-{noisy,real}-rolling`,
+  `vlp16-noisy-rolling`. Sequences: the 30 `<world>/<trajectory>` pairs of [Sequences](#sequences).
+- Without MRPT or ROS, read the plain-text copy with `text/mvsim_lio_text.py` (Python and NumPy).
+
+```python
+from huggingface_hub import hf_hub_download, snapshot_download
+
+manifest = hf_hub_download("MOLAorg/MVSim-LIO", "MANIFEST.tsv", repo_type="dataset", revision="v2.1")
+root = snapshot_download("MOLAorg/MVSim-LIO", repo_type="dataset", revision="v2.1", local_dir="mvsim_lio",
+                         allow_patterns=["office/spins/os1_32-real-rolling.*", "office/spins/gt_200hz.tum"])
+```
 
 ## The dataset in numbers
 
@@ -708,26 +775,6 @@ their sizes and SHA-256 checksums is in [MANIFEST.tsv](MANIFEST.tsv) and
 | warehouse | 18 | 98 | 15.8 GB |
 | **total** | 270 | 1470 | **271.7 GB** |
 <!-- END manifest -->
-
-## Download
-
-The data is on the Hugging Face Hub:
-[MOLAorg/MVSim-LIO](https://huggingface.co/datasets/MOLAorg/MVSim-LIO), all variants (272 GB).
-With the `hf` CLI:
-
-```bash
-# Everything but the plain-text copy:
-hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio --exclude "text/*"
-# The plain-text copy of one variant, with its reader:
-hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio \
-  --include "text/*/*/os1_32-real-rolling/*" --include "text/*/*/gt_200hz.tum.xz" \
-  --include "text/README.md" --include "text/mvsim_lio_text.py"
-# One variant, with the 200 Hz ground truth of every sequence:
-hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio \
-  --include "*/*/os1_32-real-rolling.*" --include "*/*/gt_200hz.tum"
-# One sequence, all its variants:
-hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio --include "office/spins/*"
-```
 
 ## Limitations
 

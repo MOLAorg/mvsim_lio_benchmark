@@ -50,7 +50,8 @@ with ground truth free of any error.
 
 ## Download
 
-With the [Hugging Face CLI](https://huggingface.co/docs/huggingface_hub/guides/cli) (`hf`):
+With the [Hugging Face CLI](https://huggingface.co/docs/huggingface_hub/guides/cli) (`hf`); add
+`--revision v2.1` to pin this release:
 
 ```bash
 # Everything but the plain-text copy (272 GB):
@@ -68,6 +69,26 @@ hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio \
 # One sequence, all its variants:
 hf download MOLAorg/MVSim-LIO --repo-type dataset --local-dir mvsim_lio --include "office/spins/*"
 ```
+
+**For AI agents and scripts**: repository `MOLAorg/MVSim-LIO`, repo type `dataset`, revision
+`v2.1`, public. Read `MANIFEST.tsv` first (`path`, `bytes`, `sha256` of every rawlog, ground truth
+and metadata file) and select files from it rather than listing the repository; `SHA256SUMS`
+checks a download (`sha256sum -c --ignore-missing SHA256SUMS`). Paths are
+`<world>/<trajectory>/<variant>.{rawlog,gt.tum,lidar1.gt.tum,gen.log,counts.json}`,
+`<variant>.errors.json` (`real` variants), `<world>/<trajectory>/gt_200hz.tum`, and
+`text/<world>/<trajectory>/<variant>/` for the plain-text copy (Python and NumPy reader
+`text/mvsim_lio_text.py`).
+
+```python
+from huggingface_hub import hf_hub_download, snapshot_download
+
+manifest = hf_hub_download("MOLAorg/MVSim-LIO", "MANIFEST.tsv", repo_type="dataset", revision="v2.1")
+root = snapshot_download("MOLAorg/MVSim-LIO", repo_type="dataset", revision="v2.1", local_dir="mvsim_lio",
+                         allow_patterns=["office/spins/os1_32-real-rolling.*", "office/spins/gt_200hz.tum"])
+```
+
+The worlds, trajectories, generator, ground-truth tools and evaluation code are on GitHub:
+[MOLAorg/mvsim_lio_benchmark](https://github.com/MOLAorg/mvsim_lio_benchmark).
 
 Size of each variant (all 30 sequences):
 
