@@ -1,10 +1,6 @@
 # -----------------------------------------------------------------------------
-# Traj-LO algorithm parameters for the Oxford Spires dataset (handheld/backpack
-# rig, Hesai QT64 at ~10 Hz with a real per-point time field).
-#
-# Starting point is upstream's data/config_hesai.yaml, written for Hilti's
-# Hesai, which is the closest sensor match upstream ships. Changes from it are
-# called out below.
+# Traj-LO on the MVSim LIO benchmark. Starting point is upstream's
+# data/config_hesai.yaml; changes from it are called out below.
 #
 # Traj-LO is LiDAR-only: there is deliberately no IMU block here, and the
 # launch file declares no IMU sensor either.
@@ -12,16 +8,13 @@
 
 lidar_sensor_label: "lidar1"
 
-# T_base_lidar, from the dataset's sensor.yaml. This dataset's gt-tum.txt is
-# expressed in its `base` frame, which is the raw LiDAR frame yawed 180 deg and
-# lifted 0.124 m, so the module right-composes its output with the inverse of
-# this and reports `map -> base_link` directly. Set it to identity to get the
-# raw `map -> lidar` trajectory instead.
+# T_base_lidar: pose of the LiDAR frame wrt base_link (rigs/). The module
+# right-composes its output with the inverse of this and reports
+# `map -> base_link`; identity gives the raw `map -> lidar` trajectory.
 baselink2lidar_pose_str: "${TRAJLO_BASELINK2LIDAR|0 0 0.75 0 0 0}"
 
-# Only used if a cloud arrives with no per-point time field. The Oxford Spires
-# Hesai cloud does carry one, so this should never be the path taken; the
-# module logs which one it took, at INFO, on the first scan.
+# Sweep period, used only for clouds without per-point times (the module logs
+# which one it took, at INFO, on the first scan).
 fallback_scan_period: 0.1
 
 # --- calibration ---

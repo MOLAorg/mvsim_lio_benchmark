@@ -1,39 +1,30 @@
 # -----------------------------------------------------------------------------
-# Fast-LIO2 algorithm parameters, tuned for the Oxford Spires dataset
-# (Hesai Pandar LiDAR + Alphasense IMU, handheld/backpack platform).
+# FAST-LIO2 on the MVSim LIO benchmark: upstream's defaults, with this
+# benchmark's sensor description.
 # -----------------------------------------------------------------------------
 
-# T_lidar_imu: pose of the IMU frame wrt the LiDAR frame, i.e. what the
-# dataset's sensor.yaml states directly. The wrapper inverts it itself for
-# Fast-LIO2's own "LiDAR wrt IMU" extrinsic, so the raw value goes here.
+# T_lidar_imu: pose of the IMU frame wrt the LiDAR frame. The wrapper inverts it
+# for FAST-LIO2's own "LiDAR wrt IMU" extrinsic.
+# rigs/: lidar1 at (0, 0, 0.75) m and imu1 at (0.05, -0.03, 0.45) m in base_link.
 imu_pose_in_lidar: "0.05 -0.03 -0.30 0 0 0"
 
-# T_base_lidar: pose of the LiDAR frame wrt base_link. The Hesai LiDAR is NOT
-# the reference frame in this dataset -- base_link is a 180 deg yaw and
-# 0.124 m away from it (mola_lidar_odometry's oxford-spires profile has the
-# same value, and its ground truth is in base_link). Composing
-# `imu_pose_in_lidar` through this reproduces the dataset's independently
-# recorded T_base_imu, which is how both numbers were checked.
+# T_base_lidar: pose of the LiDAR frame wrt base_link, the frame of the ground truth.
 baselink2lidar_pose_str: "0 0 0.75 0 0 0"
 ignore_point_timestamps: ${BENCH_IGNORE_POINT_STAMPS|false}
 
 lidar_sensor_label: "lidar1"
 imu_sensor_label: "imu1"
 
-# Fallback only: the Hesai Pandar PointCloud2 in this dataset carries a real
-# per-point "timestamp" field (confirmed against the raw bags), so this is
-# unused in practice.
+# Sweep period, used only for clouds without per-point times.
 fallback_scan_period: 0.1
 
-# IMU noise (generic MEMS-grade defaults; not separately characterized for
-# the Alphasense IMU used here):
+# IMU noise (generic MEMS-grade defaults):
 gyr_cov: ${FASTLIO_GYR_COV|0.1}
 acc_cov: ${FASTLIO_ACC_COV|0.1}
 b_gyr_cov: 0.0001
 b_acc_cov: 0.0001
 
-# Map / matching parameters. Handheld/backpack platform, mixed indoor and
-# outdoor campus environment, shorter range than MulRan's automotive setup:
+# Map / matching parameters:
 filter_size_surf: ${FASTLIO_FILTER_SIZE_SURF|0.5}
 filter_size_map: ${FASTLIO_FILTER_SIZE_MAP|0.5}
 cube_side_length: ${FASTLIO_CUBE_SIDE_LENGTH|1000.0}
@@ -42,11 +33,7 @@ max_iteration: ${FASTLIO_MAX_ITERATION|3}
 extrinsic_est_en: false
 init_time: 0.1
 
-# Minimum range: discard returns closer than this. The Oxford Spires rig is
-# handheld/backpack-mounted, so the carrier generates a dense near-field
-# cluster (~9% of every scan within 1 m) that is rigidly attached to the
-# sensor and therefore acts as a false zero-motion constraint on scan-to-map
-# registration. Upstream Fast-LIO2 configs set this to 0.5-4.0 m.
+# Minimum range: the rig's own (runner's BENCH_MIN_RANGE).
 blind: ${BENCH_MIN_RANGE}
 
 # --- Estimated trajectory output ---
