@@ -14,3 +14,8 @@ the difficulty score and class of each sequence (`difficulty.tsv`) with the resu
 defaults, `<method>+t<bits>` for a tuning configuration (`../configs/tuning.json`), and
 `mola_lo+map1km`, `mola_lio+map1km`, `fastlio2+map200m` for the map-extent variants
 (`../configs/overrides.json`).
+
+`timing_desktop.tsv`: runtime of every run of the synthetic variants on a desktop CPU (Ryzen 7
+2700X, one physical core per run, single-threaded): `wall_s`, `cpu_s`, `maxrss_mb`, and
+`rt_factor` (sequence duration over wall time). `status` is that of `traj_*.tsv`; the timed runs
+give the same outcome and APE.
