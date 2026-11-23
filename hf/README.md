@@ -264,8 +264,25 @@ Every rawlog also exists as plain-text tables compressed with xz, under
 
 ## Using the data from ROS 2
 
-`rawlog2rosbag` (in [mrpt_ros_bridge](https://github.com/MRPT/mrpt_ros_bridge), branch `ros2`)
-converts a sequence into a ROS 2 bag:
+`rawlog2rosbag` converts a sequence into a ROS 2 bag. It is part of
+[mrpt_ros_bridge](https://github.com/MRPT/mrpt_ros_bridge) from release 4.2.0 on, with binary
+packages for ROS 2 Humble, Jazzy, Lyrical and Rolling:
+
+```bash
+sudo apt install ros-${ROS_DISTRO}-rawlog2rosbag   # e.g. ros-jazzy-rawlog2rosbag
+```
+
+<details>
+<summary>Build from source (until 4.2.0 reaches the apt repositories of your distribution)</summary>
+
+```bash
+cd ~/ros2_ws/src && git clone -b ros2 https://github.com/MRPT/mrpt_ros_bridge.git
+cd ~/ros2_ws && colcon build --packages-up-to rawlog2rosbag && source install/setup.bash
+```
+
+</details>
+
+Then, for one sequence (the ground truth is optional):
 
 ```bash
 S=office/spins

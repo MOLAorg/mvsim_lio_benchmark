@@ -47,6 +47,10 @@ generated data is NOT in git; on the machine where it was made it lives in
    The plain-text copy (`text/` on the Hub, format in `hf/text_README.md`,
    reader `tools/mvsim_lio_text.py`) is written by `tools/export_text.sh`
    (`rawlog-to-text`, xz -9, 1 mm) and uploaded by `tools/upload_text.sh`.
+8. ROS 2 bags: `rawlog2rosbag` ships in mrpt_ros_bridge 4.2.0 (released 2026-11-23 for
+   humble, jazzy, lyrical and rolling). The README and the card show `apt install` first and
+   a collapsed source-build block: remove that block once `ros-<distro>-rawlog2rosbag` is in
+   the apt repositories (expected by 2027-01).
 
 Changing a world or trajectory invalidates its data: regenerate with
 `tools/generate.py --worlds <w> --trajs <t> --force` (a sequence whose rawlog
