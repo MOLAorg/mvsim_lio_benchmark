@@ -11,10 +11,13 @@ scored them, as used for the paper.
 | `make_maps.py`, `map_metrics.py` | Reference map (clean global-shutter sweeps at the true poses) and the map of each estimate; accuracy, completeness, F-score. Needs `tools/map_export`. |
 | `tuning.py` | The equal-budget tuning grid (`configs/tuning.json`) and the selection on the training sequences (`configs/tuned.json`). |
 | `difficulty.py` | Difficulty classes of the sequences and results per class. |
+| `vertical_tilt.py` | APE after a yaw and translation fit (first attitude given) and the tilt error. |
+| `observability/` | Method-independent observability of the sweeps along the true trajectories (Cramer-Rao bound against the reference map, shifts along the direction of travel). |
 | `lidar_validation/` | The comparison of the LiDAR error model with real Ouster sensors (its own README). |
 
-`configs/` holds the method configurations (`*-bench.yaml`), the tuning grid and picks, and
-the per-run overrides (`overrides.json`, e.g. map extents). `offsets.json` sets each method's
+`configs/` holds the method configurations (`*-bench.yaml`), the tuning grid and picks
+([TUNING.md](TUNING.md)), and the per-run overrides (`overrides.json`, e.g. map extents).
+[`results/`](results/) holds the per-run metrics of the paper. `offsets.json` sets each method's
 stamp convention for the evaluation.
 
 ## Methods
