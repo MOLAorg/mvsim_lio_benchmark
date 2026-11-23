@@ -163,7 +163,7 @@ sequence, so the variants of a sequence are paired. The `os1_64` variants differ
   sensors, and stored next to each rawlog as `<variant>.errors.json`. The first release of the
   `real` variants (another error model, with a grazing-angle cutoff and random mixed pixels) is
   kept under the tag `v1.0`: `hf download MOLAorg/MVSim-LIO --repo-type dataset --revision v1.0`.
-  This release is tagged `v2.0`.
+  This release is tagged `v2.1`: the rawlogs of `v2.0` plus the plain-text copy.
 - **Global shutter**: the whole sweep is cast from the pose at the sweep start; every point has
   `t = 0`.
 - **Rolling shutter**: column `c` fires at `t = c * 0.1 / columns` s after the sweep start, from

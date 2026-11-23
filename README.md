@@ -526,8 +526,8 @@ MVSim build.
 The `real` variants (`os1_32-real-*`, `os1_64-real-rolling`) are the error
 model v2 renders of 2026-11-21: MVSim `develop` at 8a45b9e1 (the merge of
 MRPT/mvsim#185, beam model and detection range; rendered from its head
-513fbd7f, the same tree), with the v2 parameter ranges (Hub tag `v2.0`); the
-first release's files are on the Hub under the tag `v1.0`. Every other
+513fbd7f, the same tree), with the v2 parameter ranges (Hub tag `v2.0`; `v2.1` adds the plain-text
+copy, same rawlogs); the first release's files are on the Hub under the tag `v1.0`. Every other
 published file comes from one MVSim build: 2.1.0 (`develop` at 1ffefda4)
 plus MRPT/mvsim#182 (point labels) and #183 (IMU sensor pose).
 `tools/generate.py` with that build reproduces them byte for byte, and so
