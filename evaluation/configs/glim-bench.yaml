@@ -1,0 +1,95 @@
+# -----------------------------------------------------------------------------
+# GLIM on the MVSim LIO benchmark: GLIM's own defaults (the wrapper's Oxford
+# Spires profile, except its dataset-tuned iVox resolution), with this
+# benchmark's sensor description.
+#
+# Only GLIM's odometry stage runs: its sub-mapping / global-mapping stages
+# (loop closure + global optimization) are deliberately not instantiated, so
+# these numbers stay comparable with the other LiDAR-inertial ODOMETRY
+# wrappers rather than with a full SLAM system.
+#
+# Every key below is applied on top of the JSON in `glim-config/`, which is
+# where the handful of GLIM parameters with no programmatic path in still
+# live (crop box, marginal covariances).
+# -----------------------------------------------------------------------------
+
+# T_lidar_imu: pose of the IMU frame wrt the LiDAR frame, which is GLIM's own
+# `T_lidar_imu` convention exactly ("T_world_imu = T_world_lidar *
+# T_lidar_imu"), so this value goes in uninverted -- unlike the Fast-LIO2
+# wrapper, whose extrinsic is the inverse of this one.
+imu_pose_in_lidar: "0.05 -0.03 -0.30 0 0 0"
+
+# T_base_lidar: pose of the LiDAR frame wrt base_link, the frame of the
+# ground truth.
+baselink2lidar_pose_str: "0 0 0.75 0 0 0"
+ignore_point_timestamps: ${BENCH_IGNORE_POINT_STAMPS|false}
+
+lidar_sensor_label: "lidar1"
+imu_sensor_label: "imu1"
+
+# Fallback only: the sweeps carry per-point times.
+fallback_scan_period: 0.1
+
+# Near-range cut applied by the wrapper before GLIM sees the scan. Left at 0
+# because GLIM has its own `distance_near_thresh` below, which does the same
+# job; the two would otherwise stack silently.
+blind: 0.0
+
+# --- GLIM's own JSON config directory ---
+# Empty resolves to the installed share/mola_glim_wrapper/glim-config.
+glim_config_path: ${GLIM_CONFIG_PATH|''}
+
+# GLIM's own log verbosity: off|error|warn|info|debug|trace. See Types.hpp.
+log_level: ${GLIM_LOG_LEVEL|error}
+
+# --- IMU noise (generic MEMS-grade values) ---
+imu_acc_noise:  ${GLIM_ACC_NOISE|0.05}
+imu_gyro_noise: ${GLIM_GYRO_NOISE|0.02}
+imu_int_noise:  ${GLIM_INT_NOISE|0.001}
+# Bias random walks, as densities (upstream defaults since it split them):
+imu_bias_noise_acc:  ${GLIM_BIAS_NOISE_ACC|1e-5}
+imu_bias_noise_gyro: ${GLIM_BIAS_NOISE_GYRO|1e-6}
+
+# --- Preprocessing ---
+# Range gates of the rig, shared by every method.
+distance_near_thresh: ${BENCH_MIN_RANGE}
+distance_far_thresh:  ${BENCH_MAX_RANGE}
+use_random_grid_downsampling: ${GLIM_RANDOM_DOWNSAMPLE|true}
+downsample_resolution: ${GLIM_DOWNSAMPLE_RES|1.0}
+downsample_target:     ${GLIM_DOWNSAMPLE_TARGET|10000}
+downsample_rate:       ${GLIM_DOWNSAMPLE_RATE|0.1}
+enable_outlier_removal: false
+k_correspondences:     ${GLIM_K_CORRESPONDENCES|10}
+
+# --- Registration ---
+registration_type: ${GLIM_REGISTRATION|GICP}
+max_iterations:    ${GLIM_MAX_ITERATIONS|8}
+lru_thresh:        100
+target_downsampling_rate: ${GLIM_TARGET_DOWNSAMPLE_RATE|0.1}
+ivox_resolution:   ${GLIM_IVOX_RESOLUTION|1.0}
+ivox_min_dist:     ${GLIM_IVOX_MIN_DIST|0.1}
+vgicp_resolution:  ${GLIM_VGICP_RESOLUTION|0.5}
+vgicp_voxelmap_levels: ${GLIM_VGICP_LEVELS|1}
+vgicp_voxelmap_scaling_factor: 2.0
+
+# --- Estimator ---
+# Upstream's default initializer (ROBUST: deskewed LiDAR odometry over the
+# window, then gyro bias, gravity, velocity and acc bias).
+initialization_mode: ${GLIM_INIT_MODE|ROBUST}
+# Seconds of bootstrapping (minimum span). Every scan inside this window is consumed
+# without producing a pose, so this is also how much trajectory is missing
+# from the head of every run.
+initialization_window_size: ${GLIM_INIT_WINDOW|3.0}
+smoother_lag:        ${GLIM_SMOOTHER_LAG|5.0}
+fix_imu_bias:        false
+validate_imu:        true
+save_imu_rate_trajectory: false
+num_threads:         ${GLIM_NUM_THREADS|1}
+
+# --- Estimated trajectory output ---
+# Dumped to disk on shutdown when enabled -- mirrors mola_lidar_odometry's
+# `estimated_trajectory` pipeline block (same env var names), needed so
+# `mola-cli` (online mode) can export a trajectory the same way the offline
+# `mola-glim-cli` app already does via its own `--output-tum-path` flag.
+save_trajectory_to_file: ${MOLA_SAVE_TRAJECTORY|false}
+trajectory_output_file: ${MOLA_TUM_TRAJECTORY_OUTPUT|'estimated_trajectory.tum'}

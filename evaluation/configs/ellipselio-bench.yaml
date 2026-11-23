@@ -1,0 +1,24 @@
+# EllipseLIO on the MVSim LIO benchmark: the noise parameters of the wrapper's
+# Oxford Spires profile, with this benchmark's sensor description.
+imu_pose_in_lidar: "0.05 -0.03 -0.30 0 0 0"
+baselink2lidar_pose_str: "0 0 0.75 0 0 0"
+lidar_sensor_label: "lidar1"
+imu_sensor_label: "imu1"
+fallback_scan_period: 0.1
+map_resolution: ${ELLIPSELIO_MAP_RESOLUTION|0.1}
+pub_map_n_secs: 10
+lidar_type: 3          # LidType::kOuster (not used by the wrapper's input path)
+lidar_rate: 10
+lidar_scan_lines: ${BENCH_SCAN_LINES}
+lidar_vertical_fov: ${BENCH_VFOV_DEG}
+lidar_max_range: ${BENCH_MAX_RANGE}
+lidar_min_range: ${BENCH_MIN_RANGE}
+imu_rate: 200
+imu_acc_noise: ${ELLIPSELIO_ACC_NOISE|0.0009432782069138238}
+imu_gyr_noise: ${ELLIPSELIO_GYR_NOISE|0.00023031229571253504}
+imu_acc_bias: ${ELLIPSELIO_ACC_BIAS|4.981034600256154e-05}
+imu_gyr_bias: ${ELLIPSELIO_GYR_BIAS|4.46264879417123e-06}
+# Offline benchmark: no wall-clock limit on the iterated update (upstream stops it after a
+# quarter of the scan period), so the result does not depend on the CPU speed or load and
+# runs are reproducible; bounded by the iteration count only.
+iekf_wall_clock_limit: ${ELLIPSELIO_IEKF_WALL_CLOCK_LIMIT|false}

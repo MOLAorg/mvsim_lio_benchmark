@@ -1,0 +1,72 @@
+# -----------------------------------------------------------------------------
+# Traj-LO algorithm parameters for the Oxford Spires dataset (handheld/backpack
+# rig, Hesai QT64 at ~10 Hz with a real per-point time field).
+#
+# Starting point is upstream's data/config_hesai.yaml, written for Hilti's
+# Hesai, which is the closest sensor match upstream ships. Changes from it are
+# called out below.
+#
+# Traj-LO is LiDAR-only: there is deliberately no IMU block here, and the
+# launch file declares no IMU sensor either.
+# -----------------------------------------------------------------------------
+
+lidar_sensor_label: "lidar1"
+
+# T_base_lidar, from the dataset's sensor.yaml. This dataset's gt-tum.txt is
+# expressed in its `base` frame, which is the raw LiDAR frame yawed 180 deg and
+# lifted 0.124 m, so the module right-composes its output with the inverse of
+# this and reports `map -> base_link` directly. Set it to identity to get the
+# raw `map -> lidar` trajectory instead.
+baselink2lidar_pose_str: "${TRAJLO_BASELINK2LIDAR|0 0 0.75 0 0 0}"
+
+# Only used if a cloud arrives with no per-point time field. The Oxford Spires
+# Hesai cloud does carry one, so this should never be the path taken; the
+# module logs which one it took, at INFO, on the first scan.
+fallback_scan_period: 0.1
+
+# --- calibration ---
+time_offset: 0.0
+
+# --- trajectory (upstream `trajectory:`) ---
+# All upstream defaults. seg_interval 40 ms against a 100 ms sweep means 2.5
+# segments per scan, which is what makes this a continuous-time method rather
+# than a scan-to-map one.
+init_interval: ${TRAJLO_INIT_INTERVAL|3e8}
+seg_interval: ${TRAJLO_SEG_INTERVAL|4e7}
+seg_num: ${TRAJLO_SEG_NUM|3}
+kinematic_constrain: ${TRAJLO_KINEMATIC_CONSTRAIN|2.0}
+init_pose_weight: 1e9
+converge_thresh: 0.001
+max_iterations: ${TRAJLO_MAX_ITERATIONS|25}
+
+# --- mapping (upstream `mapping:`) ---
+# ds_size/voxel_size are upstream's 0.4. The other three wrappers in this suite
+# run this dataset at 0.3, so a 0.3 run is worth doing as a secondary data
+# point rather than as the default.
+ds_size: ${TRAJLO_DS_SIZE|0.4}
+voxel_size: ${TRAJLO_VOXEL_SIZE|0.4}
+max_voxel_num: 20
+planer_thresh: 0.1
+
+# max_range 100 (upstream 120) to match the other wrappers on this dataset.
+max_range: ${BENCH_MAX_RANGE}
+
+# min_range 1.0 (upstream 0.3): the handheld carrier produces a dense
+# near-field cluster that acts as a false zero-motion constraint. Note this is
+# Traj-LO's own per-segment range filter, so the parameter keeps its upstream
+# meaning.
+min_range: ${BENCH_MIN_RANGE}
+
+# --- Visualization ---
+show_trajectory: true
+show_map: true
+camera_follows_vehicle: true
+current_pose_corner_size: 1.0
+map_point_size: 2.0
+# In emitted control poses, i.e. ~1 s at the default 40 ms segments.
+map_update_decimation: 25
+map_point_decimation: 4
+
+# --- Estimated trajectory output ---
+save_trajectory_to_file: ${MOLA_SAVE_TRAJECTORY|false}
+trajectory_output_file: ${MOLA_TUM_TRAJECTORY_OUTPUT|'estimated_trajectory.tum'}

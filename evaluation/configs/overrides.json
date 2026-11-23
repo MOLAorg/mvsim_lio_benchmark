@@ -1,0 +1,184 @@
+{
+  "_doc": "Named configurations, 'method+name': environment overrides on top of the method's defaults, one configuration for every sequence. cov..dense: the first MOLA-LIO candidates (now part of the tuning grid); map*: the map-extent ablation.",
+  "cov": {
+    "_why": "LiDAR increment weighted by its ICP covariance, so the IMU leads where the registration is degenerate",
+    "MOLA_REL_POSE_INCR_FROM_SOURCE_COV": "true"
+  },
+  "loose": {
+    "_why": "looser fixed LiDAR increment sigmas: more IMU authority everywhere",
+    "MOLA_REL_POSE_INCR_SIGMA_LIN": 0.005,
+    "MOLA_REL_POSE_INCR_SIGMA_ANG": 0.001
+  },
+  "imu": {
+    "_why": "IMU noise model set to the sensor's datasheet values (noise density, bias random walk)",
+    "MOLA_IMU_ACC_NOISE_DENSITY": 0.0023,
+    "MOLA_IMU_ACC_BIAS_RW": 0.001,
+    "MOLA_IMU_GYRO_NOISE_DENSITY": 0.00026,
+    "MOLA_IMU_GYRO_BIAS_RW": 2e-05
+  },
+  "covimu": {
+    "_why": "cov + imu",
+    "MOLA_REL_POSE_INCR_FROM_SOURCE_COV": "true",
+    "MOLA_IMU_ACC_NOISE_DENSITY": 0.0023,
+    "MOLA_IMU_ACC_BIAS_RW": 0.001,
+    "MOLA_IMU_GYRO_NOISE_DENSITY": 0.00026,
+    "MOLA_IMU_GYRO_BIAS_RW": 2e-05
+  },
+  "dense": {
+    "_why": "twice the ICP point budget, finer ICP voxels",
+    "MOLA_DECIMATED_POINTS_ICP": 6000,
+    "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_ICP": 0.07
+  },
+  "map1km": {
+    "_why": "MOLA local map kept within 1 km instead of 100 m",
+    "MOLA_INCREMENTAL_MAP_MAX_SIZE": 1000.0,
+    "MOLA_LOCAL_MAP_MAX_SIZE": 1000.0
+  },
+  "map200m": {
+    "_why": "FAST-LIO2 local map box of 200 m instead of 1 km",
+    "FASTLIO_CUBE_SIDE_LENGTH": 200.0
+  },
+  "knnplane": {
+    "_why": "MOLA's front end with Fast-LIO2's k-NN plane matching instead of GICP, everything else unchanged (adaptive threshold kept on)",
+    "MOLA_ODOMETRY_PIPELINE_YAML": "$HOME/code/ws-mola-final/install/mola_lidar_odometry/share/mola_lidar_odometry/pipelines/lidar3d-fastlio-matching.yaml",
+    "MOLA_ADAPTIVE_THRESHOLD_ENABLED": "true"
+  },
+  "novdf": {
+    "_why": "front-end factor: local map view-direction filter off",
+    "MOLA_LOCALMAP_USE_VIEW_DIRECTION_FILTER": "false"
+  },
+  "iters64": {
+    "_why": "front-end factor: four times the ICP iterations",
+    "MOLA_MAX_ICP_ITERATIONS": 64
+  },
+  "pts20k": {
+    "_why": "front-end factor: ICP point budget 20000 (almost no decimation)",
+    "MOLA_DECIMATED_POINTS_ICP": 20000
+  },
+  "kfmap": {
+    "_why": "front-end factor: keyframe local map instead of the incremental point cloud",
+    "MOLA_LOCALMAP_CLASS": "mola::KeyframePointCloudMap"
+  },
+  "nokernel": {
+    "_why": "front-end factor: no robust kernel",
+    "MOLA_LO_ROBUST_KERNEL": "RobustKernel::None"
+  },
+  "lam1e4": {
+    "_why": "development: weaker in-plane term of the plane-to-plane cost",
+    "MOLA_LOCALMAP_PLANE_REG_LAMBDA": 0.0001,
+    "MOLA_OBSLAYER_PLANE_REG_LAMBDA": 0.0001
+  },
+  "lam1e5": {
+    "_why": "development: weaker in-plane term of the plane-to-plane cost",
+    "MOLA_LOCALMAP_PLANE_REG_LAMBDA": 1e-05,
+    "MOLA_OBSLAYER_PLANE_REG_LAMBDA": 1e-05
+  },
+  "gate05": {
+    "_why": "development: at least 0.5 m between local map updates",
+    "MOLA_MIN_XYZ_BETWEEN_MAP_UPDATES": "max(0.5, (0.1e-2 + sqrt(wx^2+wy^2+wz^2)*0.1)*ESTIMATED_OBSERVATION_RADIUS)"
+  },
+  "gate10": {
+    "_why": "development: at least 1 m between local map updates",
+    "MOLA_MIN_XYZ_BETWEEN_MAP_UPDATES": "max(1.0, (0.1e-2 + sqrt(wx^2+wy^2+wz^2)*0.1)*ESTIMATED_OBSERVATION_RADIUS)"
+  },
+  "cov30": {
+    "_why": "development: sample by coverage, every occupied 0.30 m voxel in both stages",
+    "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_MAP": 0.3,
+    "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_ICP": 0.3,
+    "MOLA_VOXEL_STRIDE_MAP": 1,
+    "MOLA_VOXEL_STRIDE_ICP": 1,
+    "MOLA_LOCALMAP_K_CORRESPONDENCES_FOR_COV": 10,
+    "MOLA_OBSLAYER_K_CORRESPONDENCES_FOR_COV": 10
+  },
+  "cov30s2": {
+    "_why": "development: sample by coverage, 0.30 m voxels, ICP stage one in two",
+    "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_MAP": 0.3,
+    "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_ICP": 0.3,
+    "MOLA_VOXEL_STRIDE_MAP": 1,
+    "MOLA_VOXEL_STRIDE_ICP": 2,
+    "MOLA_LOCALMAP_K_CORRESPONDENCES_FOR_COV": 10,
+    "MOLA_OBSLAYER_K_CORRESPONDENCES_FOR_COV": 10
+  },
+  "cov20s2": {
+    "_why": "development: sample by coverage, 0.20 m voxels, ICP stage one in two",
+    "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_MAP": 0.2,
+    "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_ICP": 0.2,
+    "MOLA_VOXEL_STRIDE_MAP": 1,
+    "MOLA_VOXEL_STRIDE_ICP": 2,
+    "MOLA_LOCALMAP_K_CORRESPONDENCES_FOR_COV": 10,
+    "MOLA_OBSLAYER_K_CORRESPONDENCES_FOR_COV": 10
+  },
+  "idx05": {
+    "_why": "development: local map index cells of 0.5 m (same result, CPU only)",
+    "MOLA_INCREMENTAL_MAP_INDEX_VOXEL_SIZE": 0.5
+  },
+  "idx025": {
+    "_why": "development: local map index cells of 0.25 m (same result, CPU only)",
+    "MOLA_INCREMENTAL_MAP_INDEX_VOXEL_SIZE": 0.25
+  },
+  "gyro": {
+    "_why": "development: gyroscope rotation prior inside the ICP, shipped sigmas (needs mola_lidar_odometry >= 577d3f2)",
+    "MOLA_GYRO_ROTATION_PRIOR": "true"
+  },
+  "gcov30": {
+    "_why": "development: gyro + cov30",
+    "MOLA_GYRO_ROTATION_PRIOR": "true",
+    "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_MAP": 0.3,
+    "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_ICP": 0.3,
+    "MOLA_VOXEL_STRIDE_MAP": 1,
+    "MOLA_VOXEL_STRIDE_ICP": 1,
+    "MOLA_LOCALMAP_K_CORRESPONDENCES_FOR_COV": 10,
+    "MOLA_OBSLAYER_K_CORRESPONDENCES_FOR_COV": 10
+  },
+  "gcov30s2": {
+    "_why": "development: gyro + cov30s2",
+    "MOLA_GYRO_ROTATION_PRIOR": "true",
+    "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_MAP": 0.3,
+    "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_ICP": 0.3,
+    "MOLA_VOXEL_STRIDE_MAP": 1,
+    "MOLA_VOXEL_STRIDE_ICP": 2,
+    "MOLA_LOCALMAP_K_CORRESPONDENCES_FOR_COV": 10,
+    "MOLA_OBSLAYER_K_CORRESPONDENCES_FOR_COV": 10
+  },
+  "up": {
+    "_why": "development (needs the dev overlay): gravity-aware side test on horizontal surfaces",
+    "MOLA_DEV_SIDE_TEST_UP": 1
+  },
+  "gyroup": {
+    "_why": "development (needs the dev overlay): gravity-aware side test on horizontal surfaces + gyro",
+    "MOLA_GYRO_ROTATION_PRIOR": "true",
+    "MOLA_DEV_SIDE_TEST_UP": 1
+  },
+  "gcov30up": {
+    "_why": "development (needs the dev overlay): gravity-aware side test on horizontal surfaces + gcov30",
+    "MOLA_GYRO_ROTATION_PRIOR": "true",
+    "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_MAP": 0.3,
+    "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_ICP": 0.3,
+    "MOLA_VOXEL_STRIDE_MAP": 1,
+    "MOLA_VOXEL_STRIDE_ICP": 1,
+    "MOLA_LOCALMAP_K_CORRESPONDENCES_FOR_COV": 10,
+    "MOLA_OBSLAYER_K_CORRESPONDENCES_FOR_COV": 10,
+    "MOLA_DEV_SIDE_TEST_UP": 1
+  },
+  "gyroupgate05": {
+    "_why": "development (dev overlay): gyroup + gate05",
+    "MOLA_GYRO_ROTATION_PRIOR": "true",
+    "MOLA_DEV_SIDE_TEST_UP": 1,
+    "MOLA_MIN_XYZ_BETWEEN_MAP_UPDATES": "max(0.5, (0.1e-2 + sqrt(wx^2+wy^2+wz^2)*0.1)*ESTIMATED_OBSERVATION_RADIUS)"
+  },
+  "gyroupgate10": {
+    "_why": "development (dev overlay): gyroup + gate10",
+    "MOLA_GYRO_ROTATION_PRIOR": "true",
+    "MOLA_DEV_SIDE_TEST_UP": 1,
+    "MOLA_MIN_XYZ_BETWEEN_MAP_UPDATES": "max(1.0, (0.1e-2 + sqrt(wx^2+wy^2+wz^2)*0.1)*ESTIMATED_OBSERVATION_RADIUS)"
+  },
+  "gyroside": {
+    "_why": "development: gyro + the gravity-aligned side test as a map option (mola_metric_maps with ViewDirectionFilter::SurfaceSideGravityAligned)",
+    "MOLA_GYRO_ROTATION_PRIOR": "true",
+    "MOLA_LOCALMAP_VIEW_DIRECTION_FILTER": "ViewDirectionFilter::SurfaceSideGravityAligned"
+  },
+  "side": {
+    "_why": "development: the gravity-aligned side test as a map option, alone (mola_metric_maps with ViewDirectionFilter::SurfaceSideGravityAligned)",
+    "MOLA_LOCALMAP_VIEW_DIRECTION_FILTER": "ViewDirectionFilter::SurfaceSideGravityAligned"
+  }
+}

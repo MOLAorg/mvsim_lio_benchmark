@@ -1,0 +1,70 @@
+{
+  "_doc": [
+    "Equal-budget tuning grid: per method, up to four binary factors, each the published default (bit 0)",
+    "or one documented alternative (bit 1); 'method+tXXXX' runs the combination XXXX (factor i = character i).",
+    "Factors listed in 'exclusive' are never on together. Factor 'env' entries override the method's",
+    "configuration (environment variables of its configs/*-bench.yaml or MOLA pipeline); KISS-ICP takes",
+    "them as command line options instead (run_lio.py). IMU values are the simulated sensor's",
+    "(per-sample variance for FAST-LIO2, noise density / bias random walk elsewhere)."
+  ],
+  "train_seqs": [
+    "office/spins", "office/walk",
+    "apartment_building/dog_floors", "apartment_building/dog_stairs",
+    "parking_lot/search", "parking_lot/ugv_loop",
+    "orchard/headland", "orchard/rows",
+    "tunnel/car_through", "tunnel/ugv_inspection"
+  ],
+  "train_variants": ["os1_32-noisy-global", "os1_32-noisy-rolling"],
+  "methods": {
+    "mola_lo": {"factors": [
+      {"name": "dense", "env": {"MOLA_DECIMATED_POINTS_ICP": 6000, "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_ICP": 0.07}},
+      {"name": "iters", "env": {"MOLA_MAX_ICP_ITERATIONS": 32}},
+      {"name": "finemap", "env": {"MOLA_CLOUD_DECIMATION_VOXEL_SIZE_MAP": 0.10}},
+      {"name": "keyframes", "env": {"MOLA_LOCALMAP_MAX_SEARCH_KEYFRAMES": 6}}
+    ]},
+    "mola_lio": {"factors": [
+      {"name": "cov", "env": {"MOLA_REL_POSE_INCR_FROM_SOURCE_COV": "true"}},
+      {"name": "loose", "env": {"MOLA_REL_POSE_INCR_SIGMA_LIN": 0.005, "MOLA_REL_POSE_INCR_SIGMA_ANG": 0.001}},
+      {"name": "imu", "env": {"MOLA_IMU_ACC_NOISE_DENSITY": 2.3e-3, "MOLA_IMU_ACC_BIAS_RW": 1.0e-3,
+                              "MOLA_IMU_GYRO_NOISE_DENSITY": 2.6e-4, "MOLA_IMU_GYRO_BIAS_RW": 2.0e-5}},
+      {"name": "dense", "env": {"MOLA_DECIMATED_POINTS_ICP": 6000, "MOLA_CLOUD_DECIMATION_VOXEL_SIZE_ICP": 0.07}}
+    ]},
+    "kiss": {"factors": [
+      {"name": "finevoxel", "env": {"KISS_VOXEL_PER_RANGE": 0.005}},
+      {"name": "voxelpts", "env": {"KISS_MAX_POINTS_PER_VOXEL": 40}},
+      {"name": "initth", "env": {"KISS_INITIAL_THRESHOLD": 1.0}},
+      {"name": "minmotion", "env": {"KISS_MIN_MOTION_TH": 0.05}}
+    ]},
+    "trajlo": {"factors": [
+      {"name": "segint", "env": {"TRAJLO_SEG_INTERVAL": 2e7}},
+      {"name": "segnum", "env": {"TRAJLO_SEG_NUM": 5}},
+      {"name": "denseinput", "env": {"TRAJLO_DS_SIZE": 0.2}},
+      {"name": "coarsemap", "env": {"TRAJLO_VOXEL_SIZE": 0.8}}
+    ]},
+    "dlio": {"factors": [
+      {"name": "finevoxel", "env": {"DLIO_VOXEL_RES": 0.1}},
+      {"name": "keyframes", "env": {"DLIO_KEYFRAME_THRESH_D": 0.5}},
+      {"name": "submap", "env": {"DLIO_SUBMAP_K": 20}},
+      {"name": "corrdist", "env": {"DLIO_GICP_MAX_CORR_DIST": 1.0}}
+    ]},
+    "fastlio2": {"factors": [
+      {"name": "finescan", "env": {"FASTLIO_FILTER_SIZE_SURF": 0.25}},
+      {"name": "finemap", "env": {"FASTLIO_FILTER_SIZE_MAP": 0.25}},
+      {"name": "imu", "env": {"FASTLIO_ACC_COV": 1.0e-3, "FASTLIO_GYR_COV": 1.4e-5}},
+      {"name": "iters", "env": {"FASTLIO_MAX_ITERATION": 5}}
+    ]},
+    "glim": {"factors": [
+      {"name": "finemap", "env": {"GLIM_IVOX_RESOLUTION": 0.5}},
+      {"name": "points", "env": {"GLIM_DOWNSAMPLE_TARGET": 20000}},
+      {"name": "imu", "env": {"GLIM_ACC_NOISE": 2.3e-3, "GLIM_GYRO_NOISE": 2.6e-4,
+                              "GLIM_BIAS_NOISE_ACC": 1.0e-3, "GLIM_BIAS_NOISE_GYRO": 2.0e-5}},
+      {"name": "vgicp", "env": {"GLIM_REGISTRATION": "VGICP"}}
+    ]},
+    "ellipselio": {"factors": [
+      {"name": "coarsemap", "env": {"ELLIPSELIO_MAP_RESOLUTION": 0.2}},
+      {"name": "finemap", "env": {"ELLIPSELIO_MAP_RESOLUTION": 0.05}},
+      {"name": "imu", "env": {"ELLIPSELIO_ACC_NOISE": 2.3e-3, "ELLIPSELIO_GYR_NOISE": 2.6e-4}},
+      {"name": "imubias", "env": {"ELLIPSELIO_ACC_BIAS": 1.0e-3, "ELLIPSELIO_GYR_BIAS": 2.0e-5}}
+    ], "exclusive": [[0, 1]]}
+  }
+}

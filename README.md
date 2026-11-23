@@ -678,6 +678,10 @@ above alone.
 | moderate | 0.0296 to 0.104 % | `forest/crossing`, `forest/trail_loop`, `office/walk`, `stair_course/dog_course`, `parking_garage/walk_down`, `office/spins`, `stairwell/legged_floors`, `orchard/headland`, `apartment_building/dog_floors`, `stairwell/handheld_stairs` |
 | hard | 0.128 to 10 % | `apartment_building/dog_stairs`, `stairwell/dog_floors`, `rough_terrain/hill_loop`, `rough_terrain/traverse_fast`, `campus/long_tour`, `campus/ring_drive`, `open_field/zigzag`, `open_field/lap`, `tunnel/car_through`, `tunnel/ugv_inspection` |
 
+## Evaluation code
+
+[`evaluation/`](evaluation/) holds the runner, the method configurations, the trajectory and map metrics, the tuning grid and the comparison of the LiDAR error model with real sensors used for the paper, and the commits of the method build.
+
 ## Dataset manifest
 
 Generated data size per world (all variants). The full list of files with
