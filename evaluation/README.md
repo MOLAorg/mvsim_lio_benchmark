@@ -25,6 +25,8 @@ stamp convention for the evaluation.
 Every method runs through its MOLA wrapper, which reads the rawlogs directly. `COMMITS.tsv`
 lists the repositories and commits of the build used for the paper (Release, `-O3 -DNDEBUG`,
 ROS 2 lyrical). The wrappers' deterministic options make repeated runs bit-identical.
+For FAST-LIO2 it lists the wrapper's first public commit, which gives the paper's trajectories
+byte for byte (checked on the 30 sequences of `os1_32-real-rolling`).
 
 ## Environment
 

@@ -6,7 +6,7 @@ mola_common	https://github.com/MOLAorg/mola_common	1a3c10b4fc27c97ef95d0fe532184
 mola_ct_lio	https://github.com/MOLAorg/mola_ct_lio	c0b7beeb49d5653ce2b24a112bdb85f3d4d953ec
 mola_dlio_wrapper	https://github.com/MOLAorg/mola_dlio_wrapper	d152c63c2a9ca5fda30bea04c97d7cd4be1c8b36
 mola_ellipse_lio_wrapper	https://github.com/MOLAorg/mola_ellipse_lio_wrapper	f0b4f62a27da6e33136408a27b33129627a0557e
-mola_fast_lio2_wrapper	https://github.com/MOLAorg/mola_fast_lio2_wrapper	c5ca3975084f73edec0d16857edc160f2275396a
+mola_fast_lio2_wrapper	https://github.com/MOLAorg/mola_fast_lio2_wrapper	57548a0949f18da0d05b1fc3509ea06d69ac9ec1
 mola_glim_wrapper	https://github.com/MOLAorg/mola_glim_wrapper	bc4bd061142f32617a081b6b30aa77fe049389dd
 mola_gnss_to_markers	https://github.com/MOLAorg/mola_gnss_to_markers	ae966795492b7331c5d30a92d6ede0d48c2100d1
 mola_imu_preintegration	https://github.com/MOLAorg/mola_imu_preintegration	06fbb1719f253a2f59da1d4687fcd15f038dd315
